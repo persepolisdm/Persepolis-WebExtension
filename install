@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#Istaller for Perspolis Download Manager chrome integration
+#Author: Jafar Akhondali
+
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root!" 
+   exit 1
+fi
+
+HOSTS_PATH="/etc/chromium/native-messaging-hosts/"
+cp pdm-chrome-wrapper/bin/pdm-chrome-wrapper /usr/bin/pdm-chrome-wrapper && chmod +x /usr/bin/pdm-chrome-wrapper
+mkdir -p $HOSTS_PATH && cp pdm-chrome-wrapper/conf/com.persepolis.pdmchromewrapper.json $HOSTS_PATH 
+echo "Integration has been installed successfully"
