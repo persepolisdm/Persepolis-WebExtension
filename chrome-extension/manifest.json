@@ -15,8 +15,10 @@
                 "content.js"
             ],
             "matches": [
+                "https://*/*",
                 "http://*/*",
-                "https://*/*"
+                "file://*/*",
+                "ftp://*/*"
             ],
             "run_at": "document_start"
         }
@@ -40,7 +42,9 @@
         "nativeMessaging",
         "contextMenus",
         "downloads",
-	"storage"
+        "cookies",
+        "storage",
+        "tabs"
     ],
-    "version": "1.1.8"
+    "version": "1.2"
 }

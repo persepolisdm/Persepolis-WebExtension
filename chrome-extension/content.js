@@ -18,16 +18,23 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+function sendToExtension(msg) {
+    chrome.runtime.sendMessage({
+        type:"keyPress",
+        message: msg
+    });
+}
+
 window.onkeydown = function(event) {
     if (event.keyCode == 45) { // Insert
-        chrome.extension.sendRequest({ message: 'disable' });
+        sendToExtension('disable');
     }
 };
 
 window.onkeyup = function(event) {
     if (event.keyCode == 45) { // Insert
-       chrome.extension.sendRequest({ message: 'enable' });
+        sendToExtension('enable');
     } else if (event.keyCode == 85 && event.ctrlKey && event.shiftKey) { // Ctrl + Shift + U
-        chrome.extension.sendRequest({ message: 'toggle' });
+        sendToExtension('toggle');
     }
 };

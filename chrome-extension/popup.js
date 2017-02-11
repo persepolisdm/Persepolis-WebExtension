@@ -39,3 +39,18 @@ window.addEventListener('load', function(evt) {
     document.getElementById('keywords').value = localStorage["pdm-keywords"];
     document.getElementById('chk-interrupt').checked = interrupt;
 });
+
+
+
+
+
+
+
+
+//Send selected html to background page
+
+
+
+
+
+

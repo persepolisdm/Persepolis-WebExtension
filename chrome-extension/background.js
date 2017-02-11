@@ -19,7 +19,7 @@
 */
 
 var interruptDownloads = true;
-var ugetWrapperNotFound = true;
+var ugetWrapperNotFound = false;
 var interruptDownload = false;
 var disposition = '';
 var hostName = 'com.persepolis.pdmchromewrapper';
@@ -73,18 +73,60 @@ var message = {
     postdata: ''
 };
 
-// Listen to the key press
-chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-    var msg = request.message;
-    if(msg === 'enable') {
-        // Temporarily enable
-        setInterruptDownload(true);
-    } else if(msg == 'disable') {
-        // Temporarily disable
-        setInterruptDownload(false);
-    } else {
-        // Toggle
-        setInterruptDownload(!interruptDownloads, true);
+
+
+function getCookies(url,callback) {
+    chrome.cookies.getAll({url:url},function (cookies) {
+        var cookieArray = [];
+        for(var i=0;i<cookies.length;i++){
+            cookieArray.push(cookies[i].name + "=" + cookies[i].value);
+        }
+        callback(cookieArray.join(";"));
+    });
+}
+
+
+
+
+
+
+
+//chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    var type = request.type;
+    if(type === "getSelected" || type === "getAll"){
+
+        var links = request.message;
+        getCookies(sender.url,function (cookies){
+            var usedLinks =[];
+            for(var i=0;i<links.length;i++){
+                var link = links[i];
+                //Check if we already didnt send this link
+                if(usedLinks.indexOf(link) == -1){
+                    clearMessage();
+                    usedLinks.push(link); //Add link to used link so we won't use it again
+                    message.url = link;
+                    message.referrer = sender.url;
+                    message.cookies  = cookies;
+                    sendMessageToHost(message);
+
+                }
+            }
+            clearMessage();
+        });
+    }
+    else if(type == "keyPress"){
+        var msg = request.message;
+        if(msg === 'enable') {
+            // Temporarily enable
+            setInterruptDownload(true);
+        } else if(msg == 'disable') {
+            // Temporarily disable
+            setInterruptDownload(false);
+        } else {
+            // Toggle
+            setInterruptDownload(!interruptDownloads, true);
+        }
     }
 });
 
@@ -92,6 +134,7 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 function sendMessageToHost(message) {
     chrome.runtime.sendNativeMessage(hostName, message, function(response) {
         ugetWrapperNotFound = (response == null);
+        //console.log(response);
     });
 }
 
@@ -112,12 +155,29 @@ function postParams(source) {
     return array.join('&');
 }
 
-// Add to Chrome context menu
+//Add download with persepolis to context menu
 chrome.contextMenus.create({
     title: 'Download with Persepolis',
     id: "download_with_pdm",
     contexts: ['link']
 });
+
+//Add download selected text to context menu
+chrome.contextMenus.create({
+    title: 'Download Selected links with Persepolis',
+    id: "download_links_with_pdm",
+    contexts: ['selection']
+});
+
+//Add download ALL LINKS to context menu
+chrome.contextMenus.create({
+    title: 'Download All Links with Persepolis',
+    id: "download_all_links_with_pdm",
+    contexts: ['page']
+});
+
+
+
 
 chrome.contextMenus.onClicked.addListener(function(info, tab) {
     "use strict";
@@ -125,11 +185,17 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         clearMessage();
         message.url = info['linkUrl'];
         message.referrer = info['pageUrl'];
-	message.cookies  = info['cookies'];
+	    message.cookies  = info['cookies'];
         sendMessageToHost(message);
         clearMessage();
+    }else if(info.menuItemId ==="download_links_with_pdm"){
+        chrome.tabs.executeScript(null, { file: "getselected.js" });
+    }else if(info.menuItemId ==="download_all_links_with_pdm"){
+        chrome.tabs.executeScript(null, { file: "getall.js" });
     }
 });
+
+
 
 // Interrupt Google Chrome download
 chrome.downloads.onCreated.addListener(function(downloadItem) {
@@ -140,7 +206,7 @@ chrome.downloads.onCreated.addListener(function(downloadItem) {
 
     var fileSize = downloadItem['fileSize'];
 
-    if (fileSize != -1 && fileSize < 300000) { // 300 kb
+    if (fileSize != -1 /*&& fileSize < 300000*/) {
         return;
     }
 
@@ -248,11 +314,11 @@ chrome.webRequest.onHeadersReceived.addListener(function(details) {
         if (details.responseHeaders[i].name.toLowerCase() == 'content-length') {
             message.filesize = details.responseHeaders[i].value;
             var fileSize = parseInt(message.filesize);
-            if (fileSize < 300000) { // 300 kb
+            /*if (fileSize < 300000) { // 300 kb
                 return {
                     responseHeaders: details.responseHeaders
                 };
-            }
+            }*/
         } else if (details.responseHeaders[i].name.toLowerCase() == 'content-disposition') {
             disposition = details.responseHeaders[i].value;
             if (disposition.lastIndexOf('filename') != -1) {
@@ -296,7 +362,6 @@ chrome.webRequest.onHeadersReceived.addListener(function(details) {
         }
         sendMessageToHost(message);
         message.postdata = '';
-        var scheme = /^https/.test(details.url) ? 'https' : 'http';
         if (chromeVersion >= 35) {
             return { redirectUrl: "javascript:" };
         } else if (details.frameId === 0) {
@@ -323,7 +388,6 @@ chrome.webRequest.onHeadersReceived.addListener(function(details) {
             cancel: true
         };
     }
-    interruptDownloads == true;
     clearMessage();
     return {
         responseHeaders: details.responseHeaders
@@ -343,12 +407,12 @@ chrome.webRequest.onHeadersReceived.addListener(function(details) {
 
 function updateKeywords(data) {
     keywords = data.split(/[\s,]+/);
-};
+}
 
 function isBlackListed(url) {
-    if (url.includes("//docs.google.com/") || url.includes("googleusercontent.com/docs")) { // Cannot download from Google Docs
+    /*if (url.includes("//docs.google.com/") || url.includes("googleusercontent.com/docs")) { // Cannot download from Google Docs
         return true;
-    }
+    }*/
     for (keyword of keywords) {
         if (url.includes(keyword)) {
             return true;
