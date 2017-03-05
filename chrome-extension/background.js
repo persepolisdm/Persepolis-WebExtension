@@ -19,7 +19,7 @@
 */
 
 
-var BrowserNameSpace = chrome;
+const BrowserNameSpace = chrome;
 
 var interruptDownloads = true;
 var ugetWrapperNotFound = false;
@@ -192,9 +192,9 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
         sendMessageToHost(message);
         clearMessage();
     }else if(info.menuItemId ==="download_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "getselected.js" });
+        BrowserNameSpace.tabs.executeScript(null, { file: "scripts/getselected.js" });
     }else if(info.menuItemId ==="download_all_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "getall.js" });
+        BrowserNameSpace.tabs.executeScript(null, { file: "scripts/getall.js" });
     }
 });
 
@@ -428,9 +428,9 @@ function isBlackListed(url) {
 function setInterruptDownload(interrupt, writeToStorage) {
     interruptDownloads = interrupt;
     if (interrupt) {
-        BrowserNameSpace.browserAction.setIcon({ path: "./icon_32.png" });
+        BrowserNameSpace.browserAction.setIcon({ path: "./icons/icon_32.png" });
     } else {
-        BrowserNameSpace.browserAction.setIcon({ path: "./icon_disabled_32.png" });
+        BrowserNameSpace.browserAction.setIcon({ path: "./icons/icon_disabled_32.png" });
     }
     if(writeToStorage) {
         localStorage["pdm-interrupt"] = interrupt.toString();

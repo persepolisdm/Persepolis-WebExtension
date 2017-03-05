@@ -18,13 +18,17 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+const BrowserNameSpace = chrome;
+
+
 function addBookmark() {
     var keywords = document.getElementById("keywords").value;
     var interrupt = document.getElementById('chk-interrupt').checked;
 
     localStorage["pdm-keywords"] = keywords;
 
-    chrome.runtime.getBackgroundPage(function(backgroundPage) {
+    BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
         backgroundPage.updateKeywords(keywords);
         backgroundPage.setInterruptDownload(interrupt, true);
     });
@@ -39,18 +43,3 @@ window.addEventListener('load', function(evt) {
     document.getElementById('keywords').value = localStorage["pdm-keywords"];
     document.getElementById('chk-interrupt').checked = interrupt;
 });
-
-
-
-
-
-
-
-
-//Send selected html to background page
-
-
-
-
-
-

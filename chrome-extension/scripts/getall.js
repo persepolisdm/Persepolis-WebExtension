@@ -1,4 +1,6 @@
-var BrowserNameSpace = chrome;
+
+const BrowserNameSpace = chrome;
+
 
 function sendToExtension(msg) {
     BrowserNameSpace.runtime.sendMessage({
