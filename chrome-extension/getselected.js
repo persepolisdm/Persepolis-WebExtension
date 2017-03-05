@@ -1,5 +1,7 @@
+var BrowserNameSpace = chrome;
+
 function sendToExtension(msg) {
-    chrome.runtime.sendMessage({
+    BrowserNameSpace.runtime.sendMessage({
         type:"getSelected",
         message: msg
     });

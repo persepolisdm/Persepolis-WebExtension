@@ -18,6 +18,9 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+var BrowserNameSpace = chrome;
+
 var interruptDownloads = true;
 var ugetWrapperNotFound = false;
 var interruptDownload = false;
@@ -76,7 +79,7 @@ var message = {
 
 
 function getCookies(url,callback) {
-    chrome.cookies.getAll({url:url},function (cookies) {
+    BrowserNameSpace.cookies.getAll({url:url},function (cookies) {
         var cookieArray = [];
         for(var i=0;i<cookies.length;i++){
             cookieArray.push(cookies[i].name + "=" + cookies[i].value);
@@ -92,7 +95,7 @@ function getCookies(url,callback) {
 
 
 //chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var type = request.type;
     if(type === "getSelected" || type === "getAll"){
 
@@ -132,7 +135,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 // Send message to the pdm-chrome-wrapper
 function sendMessageToHost(message) {
-    chrome.runtime.sendNativeMessage(hostName, message, function(response) {
+    BrowserNameSpace.runtime.sendNativeMessage(hostName, message, function(response) {
         ugetWrapperNotFound = (response == null);
         //console.log(response);
     });
@@ -156,21 +159,21 @@ function postParams(source) {
 }
 
 //Add download with persepolis to context menu
-chrome.contextMenus.create({
+BrowserNameSpace.contextMenus.create({
     title: 'Download with Persepolis',
     id: "download_with_pdm",
     contexts: ['link']
 });
 
 //Add download selected text to context menu
-chrome.contextMenus.create({
+BrowserNameSpace.contextMenus.create({
     title: 'Download Selected links with Persepolis',
     id: "download_links_with_pdm",
     contexts: ['selection']
 });
 
 //Add download ALL LINKS to context menu
-chrome.contextMenus.create({
+BrowserNameSpace.contextMenus.create({
     title: 'Download All Links with Persepolis',
     id: "download_all_links_with_pdm",
     contexts: ['page']
@@ -179,7 +182,7 @@ chrome.contextMenus.create({
 
 
 
-chrome.contextMenus.onClicked.addListener(function(info, tab) {
+BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
     "use strict";
     if (info.menuItemId === "download_with_pdm") {
         clearMessage();
@@ -189,16 +192,16 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         sendMessageToHost(message);
         clearMessage();
     }else if(info.menuItemId ==="download_links_with_pdm"){
-        chrome.tabs.executeScript(null, { file: "getselected.js" });
+        BrowserNameSpace.tabs.executeScript(null, { file: "getselected.js" });
     }else if(info.menuItemId ==="download_all_links_with_pdm"){
-        chrome.tabs.executeScript(null, { file: "getall.js" });
+        BrowserNameSpace.tabs.executeScript(null, { file: "getall.js" });
     }
 });
 
 
 
 // Interrupt Google Chrome download
-chrome.downloads.onCreated.addListener(function(downloadItem) {
+BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
     if (ugetWrapperNotFound || !interruptDownloads) { // pdm-chrome-wrapper not installed
         return;
@@ -225,8 +228,8 @@ chrome.downloads.onCreated.addListener(function(downloadItem) {
         return;
     }
 
-    chrome.downloads.cancel(downloadItem.id); // Cancel the download
-    chrome.downloads.erase({ id: downloadItem.id }); // Erase the download from list
+    BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
+    BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
 
     clearMessage();
     message.url = url;
@@ -236,7 +239,7 @@ chrome.downloads.onCreated.addListener(function(downloadItem) {
     sendMessageToHost(message);
 });
 
-chrome.webRequest.onBeforeRequest.addListener(function(details) {
+BrowserNameSpace.webRequest.onBeforeRequest.addListener(function(details) {
     if (details.method == 'POST') {
         message.postdata = postParams(details.requestBody.formData);
     }
@@ -255,7 +258,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
     'blocking',
     'requestBody'
 ]);
-chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
+BrowserNameSpace.webRequest.onBeforeSendHeaders.addListener(function(details) {
     clearMessage();
     currRequest++;
     if (currRequest > 2)
@@ -286,7 +289,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
     'blocking',
     'requestHeaders'
 ]);
-chrome.webRequest.onHeadersReceived.addListener(function(details) {
+BrowserNameSpace.webRequest.onHeadersReceived.addListener(function(details) {
 
     if (ugetWrapperNotFound) { // pdm-chrome-wrapper not installed
         return {
@@ -365,7 +368,7 @@ chrome.webRequest.onHeadersReceived.addListener(function(details) {
         if (chromeVersion >= 35) {
             return { redirectUrl: "javascript:" };
         } else if (details.frameId === 0) {
-            chrome.tabs.update(details.tabId, {
+            BrowserNameSpace.tabs.update(details.tabId, {
                 url: "javascript:"
             });
             var responseHeaders = details.responseHeaders.filter(function(header) {
@@ -425,9 +428,9 @@ function isBlackListed(url) {
 function setInterruptDownload(interrupt, writeToStorage) {
     interruptDownloads = interrupt;
     if (interrupt) {
-        chrome.browserAction.setIcon({ path: "./icon_32.png" });
+        BrowserNameSpace.browserAction.setIcon({ path: "./icon_32.png" });
     } else {
-        chrome.browserAction.setIcon({ path: "./icon_disabled_32.png" });
+        BrowserNameSpace.browserAction.setIcon({ path: "./icon_disabled_32.png" });
     }
     if(writeToStorage) {
         localStorage["pdm-interrupt"] = interrupt.toString();
