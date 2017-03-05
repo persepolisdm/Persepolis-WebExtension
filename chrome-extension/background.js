@@ -192,9 +192,9 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
         sendMessageToHost(message);
         clearMessage();
     }else if(info.menuItemId ==="download_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "scripts/getselected.js" });
+        BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
     }else if(info.menuItemId ==="download_all_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "scripts/getall.js" });
+        BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
     }
 });
 
