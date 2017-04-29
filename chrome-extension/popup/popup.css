@@ -30,8 +30,8 @@ input#save {
 }
 
 #img-icon {
-    width: 24px;
-    height: 24px;
+    width: 48px;
+    height: 48px;
     vertical-align: middle;
 }
 
@@ -45,7 +45,7 @@ span {
     display: table-cell;
     vertical-align: middle;
     font-weight: bold;
-    font-size: 11pt;
+    font-size: 24pt;
     padding-left: 5px;
     color: #474747;
 }
@@ -120,8 +120,8 @@ label {
 .switch {
     position: relative;
     display: inline-block;
-    width: 30px;
-    height: 17px;
+    width: 39px;
+    height: 14px;
     display: table-cell;
     vertical-align: middle;
     font-weight: bold;
@@ -148,10 +148,10 @@ label {
 .slider:before {
     position: absolute;
     content: "";
-    height: 13px;
-    width: 13px;
-    left: 2px;
-    bottom: 2px;
+    height: 27px;
+    width: 27px;
+    left: 0px;
+    bottom: 0px;
     background-color: white;
     -webkit-transition: .4s;
     transition: .4s;
