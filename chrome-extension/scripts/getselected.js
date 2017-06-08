@@ -7,8 +7,7 @@ function sendToExtension(msg) {
     });
 }
 
-
-var selectedNode = window.getSelection().getRangeAt(0).commonAncestorContainer;
+var selectedNode = window.getSelection().getRangeAt(0).cloneContents();
 var nodes = selectedNode.querySelectorAll("a");
 var links = [];
 for(var i=0;i<nodes.length;i++){

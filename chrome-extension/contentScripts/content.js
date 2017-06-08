@@ -18,7 +18,12 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const BrowserNameSpace = chrome;
+var BrowserNameSpace;
+if(typeof browser !== 'undefined' )
+    BrowserNameSpace = browser ;
+else if(typeof chrome !== 'undefined' )
+    BrowserNameSpace = chrome;
+
 
 function sendToExtension(msg) {
     BrowserNameSpace.runtime.sendMessage({

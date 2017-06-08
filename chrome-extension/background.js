@@ -1,72 +1,76 @@
 /*
-* pdm-chrome-wrapper (forked from uget-chrome-wrapper ) is an extension to integrate uGet Download manager
-* with Google Chrome, Chromium and Vivaldi in Linux and Windows.
-*
-* Copyright (C) 2016  Gobinath
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Pdm WebExtension (forked from uget-chrome-wrapper ) is an extension to integrate Persepolis Download manager
+ * with Google Chrome, Chromium, Firefox and Vivaldi in Linux, Windows and OSX.
+ *
+ * Copyright (C) 2016  Gobinath
+ * Modified copyright (C) 2017  Jafar Akhondali
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-
-const BrowserNameSpace = chrome;
-
-var interruptDownloads = true;
-var ugetWrapperNotFound = false;
-var interruptDownload = false;
-var disposition = '';
-var hostName = 'com.persepolis.pdmchromewrapper';
-var chromeVersion;
-var filter = [];
-var keywords = [];
-var requestList = [{
-    cookies: '',
-    postdata: '',
-    id: ''
-}, {
-    cookies: '',
-    postdata: '',
-    id: ''
-}, {
-    cookies: '',
-    postdata: '',
-    id: ''
-}];
-var currRequest = 0;
-try {
-    chromeVersion = /Chrome\/([0-9]+)/.exec(navigator.userAgent)[1];
-} catch (ex) {
-    chromeVersion = 33;
+let BrowserNameSpace;
+let isChrome=false,isFF=false;
+if(typeof browser !== 'undefined' ){
+    BrowserNameSpace = browser ;
+    isFF=true;
 }
+else if(typeof chrome !== 'undefined' ){
+    BrowserNameSpace = chrome;
+    isChrome=true;
+}
+
+
+
+let interruptDownloads = true;
+let ugetWrapperNotFound = false;
+let interruptDownload = false;
+let disposition = '';
+let hostName = 'com.persepolis.pdmchromewrapper';
+let chromeVersion;
+let keywords = [];
+
+
+if(isChrome){
+    try {
+        chromeVersion = /Chrome\/([0-9]+)/.exec(navigator.userAgent)[1];
+    } catch (ex) {
+        chromeVersion = 33;
+    }
+}
+
+
 chromeVersion = parseInt(chromeVersion);
 sendMessageToHost({ version: "1.1.6" });
 
 if (localStorage["pdm-keywords"]) {
     keywords = localStorage["pdm-keywords"].split(/[\s,]+/);
 } else {
-	localStorage["pdm-keywords"] = '';
+    localStorage["pdm-keywords"] = '';
 }
 
 
 if (!localStorage["pdm-interrupt"]) {
     localStorage["pdm-interrupt"] = 'true';
 } else {
-    var interrupt = (localStorage["pdm-interrupt"] == "true");
+    let interrupt = (localStorage["pdm-interrupt"] == "true");
     setInterruptDownload(interrupt);
 }
+
+
 //console.log(localStorage["pdm-interrupt"]);
 // Message format to send the download information to the pdm-chrome-wrapper
-var message = {
+let message = {
     url: '',
     cookies: '',
     useragent: '',
@@ -80,8 +84,8 @@ var message = {
 
 function getCookies(url,callback) {
     BrowserNameSpace.cookies.getAll({url:url},function (cookies) {
-        var cookieArray = [];
-        for(var i=0;i<cookies.length;i++){
+        let cookieArray = [];
+        for(let i=0;i<cookies.length;i++){
             cookieArray.push(cookies[i].name + "=" + cookies[i].value);
         }
         callback(cookieArray.join(";"));
@@ -90,20 +94,17 @@ function getCookies(url,callback) {
 
 
 
-
-
-
-
 //chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    var type = request.type;
+    let type = request.type;
     if(type === "getSelected" || type === "getAll"){
 
-        var links = request.message;
+        let links = request.message;
         getCookies(sender.url,function (cookies){
-            var usedLinks =[];
-            for(var i=0;i<links.length;i++){
-                var link = links[i];
+
+            let usedLinks =[];
+            for(let i=0;i<links.length;i++){
+                let link = links[i];
                 //Check if we already didnt send this link
                 if(usedLinks.indexOf(link) == -1){
                     clearMessage();
@@ -111,6 +112,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                     message.url = link;
                     message.referrer = sender.url;
                     message.cookies  = cookies;
+                    console.log(cookies);
                     sendMessageToHost(message);
 
                 }
@@ -119,7 +121,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
         });
     }
     else if(type == "keyPress"){
-        var msg = request.message;
+        let msg = request.message;
         if(msg === 'enable') {
             // Temporarily enable
             setInterruptDownload(true);
@@ -137,7 +139,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 function sendMessageToHost(message) {
     BrowserNameSpace.runtime.sendNativeMessage(hostName, message, function(response) {
         ugetWrapperNotFound = (response == null);
-        //console.log(response);
+        console.log(response);
     });
 }
 
@@ -151,8 +153,8 @@ function clearMessage() {
 }
 
 function postParams(source) {
-    var array = [];
-    for (var key in source) {
+    let array = [];
+    for (let key in source) {
         array.push(encodeURIComponent(key) + '=' + encodeURIComponent(source[key]));
     }
     return array.join('&');
@@ -188,7 +190,7 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
         clearMessage();
         message.url = info['linkUrl'];
         message.referrer = info['pageUrl'];
-	    message.cookies  = info['cookies'];
+        message.cookies  = info['cookies'];
         sendMessageToHost(message);
         clearMessage();
     }else if(info.menuItemId ==="download_links_with_pdm"){
@@ -200,25 +202,20 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
 
 
 
-// Interrupt Google Chrome download
+// Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
-    if (ugetWrapperNotFound || !interruptDownloads) { // pdm-chrome-wrapper not installed
+    if (ugetWrapperNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
         return;
     }
 
-    var fileSize = downloadItem['fileSize'];
+    let fileSize = downloadItem['fileSize'];
 
     if (fileSize != -1 /*&& fileSize < 300000*/) {
         return;
     }
 
-    var url = '';
-    if (chromeVersion >= 54) {
-        url = downloadItem['finalUrl'];
-    } else {
-        url = downloadItem['url'];
-    }
+    let url = url = downloadItem['finalUrl'];
 
     if (!url) {
         return;
@@ -233,180 +230,33 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
     clearMessage();
     message.url = url;
-    message.filename = downloadItem['filename'];
-    message.filesize = fileSize;
+    //message.filename = downloadItem['filename']; Let Persepolis find download name
+    //message.fileSize = downloadItem['fileSize']; Let Persepolis find download fileSize
+    //message.filesize = fileSize;
     message.referrer = downloadItem['referrer'];
     sendMessageToHost(message);
 });
 
-BrowserNameSpace.webRequest.onBeforeRequest.addListener(function(details) {
-    if (details.method == 'POST') {
-        message.postdata = postParams(details.requestBody.formData);
-    }
-    return {
-        requestHeaders: details.requestHeaders
-    };
-}, {
-    urls: [
-        '<all_urls>'
-    ],
-    types: [
-        'main_frame',
-        'sub_frame'
-    ]
-}, [
-    'blocking',
-    'requestBody'
-]);
-BrowserNameSpace.webRequest.onBeforeSendHeaders.addListener(function(details) {
-    clearMessage();
-    currRequest++;
-    if (currRequest > 2)
-        currRequest = 2;
-    requestList[currRequest].id = details.requestId;
-    for (var i = 0; i < details.requestHeaders.length; ++i) {
-        if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
-            message.useragent = details.requestHeaders[i].value;
-        } else if (details.requestHeaders[i].name.toLowerCase() === 'referer') {
-            requestList[currRequest].referrer = details.requestHeaders[i].value;
-        } else if (details.requestHeaders[i].name.toLowerCase() === 'cookie') {
-            requestList[currRequest].cookies = details.requestHeaders[i].value;
-        }
-    }
-    return {
-        requestHeaders: details.requestHeaders
-    };
-}, {
-    urls: [
-        '<all_urls>'
-    ],
-    types: [
-        'main_frame',
-        'sub_frame',
-        'xmlhttprequest'
-    ]
-}, [
-    'blocking',
-    'requestHeaders'
-]);
-BrowserNameSpace.webRequest.onHeadersReceived.addListener(function(details) {
+// BrowserNameSpace.webRequest.onBeforeRequest.addListener(function(details) {
+//     if (details.method == 'POST') {
+//         message.postdata = postParams(details.requestBody.formData);
+//     }
+//     return {
+//         requestHeaders: details.requestHeaders
+//     };
+// }, {
+//     urls: [
+//         '<all_urls>'
+//     ],
+//     types: [
+//         'main_frame',
+//         'sub_frame'
+//     ]
+// }, [
+//     'blocking',
+//     'requestBody'
+// ]);
 
-    if (ugetWrapperNotFound) { // pdm-chrome-wrapper not installed
-        return {
-            responseHeaders: details.responseHeaders
-        };
-    }
-
-    if (!details.statusLine.includes("200")) { // HTTP response is not OK
-        return {
-            responseHeaders: details.responseHeaders
-        };
-    }
-
-    if (isBlackListed(details.url)) {
-        return {
-            responseHeaders: details.responseHeaders
-        };
-    }
-
-    interruptDownload = false;
-    message.url = details.url;
-    var contentType = "";
-
-    for (var i = 0; i < details.responseHeaders.length; ++i) {
-        if (details.responseHeaders[i].name.toLowerCase() == 'content-length') {
-            message.filesize = details.responseHeaders[i].value;
-            var fileSize = parseInt(message.filesize);
-            /*if (fileSize < 300000) { // 300 kb
-                return {
-                    responseHeaders: details.responseHeaders
-                };
-            }*/
-        } else if (details.responseHeaders[i].name.toLowerCase() == 'content-disposition') {
-            disposition = details.responseHeaders[i].value;
-            if (disposition.lastIndexOf('filename') != -1) {
-                message.filename = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
-                message.filename = message.filename.replace(/["']/g, "");
-                interruptDownload = true;
-            }
-        } else if (details.responseHeaders[i].name.toLowerCase() == 'content-type') {
-            contentType = details.responseHeaders[i].value;
-            if (/\b(?:xml|rss|javascript|json|html|text)\b/.test(contentType)) {
-                interruptDownload = false;
-                return {
-                    responseHeaders: details.responseHeaders
-                };
-            } else if (/\b(?:application\/|video\/|audio\/)\b/.test(contentType) == true) {
-                interruptDownload = true;
-            } else {
-                return {
-                    responseHeaders: details.responseHeaders
-                };
-            }
-        }
-    }
-    if (interruptDownload == true && interruptDownloads == true) {
-        for (var i = 0; i < filter.length; i++) {
-            if (filter[i] != "" && contentType.lastIndexOf(filter[i]) != -1) {
-                return {
-                    responseHeaders: details.responseHeaders
-                };
-            }
-        }
-        for (var j = 0; j < 3; j++) {
-            if (details.requestId == requestList[j].id && requestList[j].id != "") {
-                message.referrer = requestList[j].referrer;
-                message.cookies = requestList[j].cookies;
-                break;
-            }
-        }
-        if (details.method != "POST") {
-            message.postdata = '';
-        }
-        sendMessageToHost(message);
-        message.postdata = '';
-        if (chromeVersion >= 35) {
-            return { redirectUrl: "javascript:" };
-        } else if (details.frameId === 0) {
-            BrowserNameSpace.tabs.update(details.tabId, {
-                url: "javascript:"
-            });
-            var responseHeaders = details.responseHeaders.filter(function(header) {
-                var name = header.name.toLowerCase();
-                return name !== 'content-type' &&
-                    name !== 'x-content-type-options' &&
-                    name !== 'content-disposition';
-            }).concat([{
-                name: 'Content-Type',
-                value: 'text/plain'
-            }, {
-                name: 'X-Content-Type-Options',
-                value: 'nosniff'
-            }]);
-            return {
-                responseHeaders: responseHeaders
-            };
-        }
-        return {
-            cancel: true
-        };
-    }
-    clearMessage();
-    return {
-        responseHeaders: details.responseHeaders
-    };
-}, {
-    urls: [
-        '<all_urls>'
-    ],
-    types: [
-        'main_frame',
-        'sub_frame'
-    ]
-}, [
-    'responseHeaders',
-    'blocking'
-]);
 
 function updateKeywords(data) {
     keywords = data.split(/[\s,]+/);
@@ -414,15 +264,17 @@ function updateKeywords(data) {
 
 function isBlackListed(url) {
     /*if (url.includes("//docs.google.com/") || url.includes("googleusercontent.com/docs")) { // Cannot download from Google Docs
-        return true;
-    }*/
+     return true;
+     }*/
     for (keyword of keywords) {
         if (url.includes(keyword)) {
             return true;
         }
     }
     return false;
+
 }
+
 
 
 function setInterruptDownload(interrupt, writeToStorage) {

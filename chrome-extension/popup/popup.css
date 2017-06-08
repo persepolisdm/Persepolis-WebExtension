@@ -80,10 +80,10 @@ label {
 
 #keywords:focus {
     outline: none;
-    border: 1px solid #7bc1f7;
-    box-shadow: 0px 0px 5px #7bc1f7;
-    -moz-box-shadow: 0px 0px 5px #7bc1f7;
-    -webkit-box-shadow: 0px 0px 5px #7bc1f7;
+    border: 1px solid #F22613;
+    box-shadow: 0px 0px 5px #F22613;
+    -moz-box-shadow: 0px 0px 5px #F22613;
+    -webkit-box-shadow: 0px 0px 5px #F22613;
 }
 
 #button-container {
@@ -98,7 +98,7 @@ label {
 }
 
 #save {
-    background-color: #2196F3;
+    background-color: #CF000F;
     -moz-border-radius: 20px;
     -webkit-border-radius: 20px;
     border-radius: 20px;
@@ -114,7 +114,7 @@ label {
 
 #save:hover {
     border: none;
-    background: #005DA6;
+    background: #CF000F;
 }
 
 .switch {
@@ -158,11 +158,11 @@ label {
 }
 
 input:checked + .slider {
-    background-color: #2196F3;
+    background-color: #D91E18;
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px #D91E18;
 }
 
 input:checked + .slider:before {
