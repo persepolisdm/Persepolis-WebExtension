@@ -40,18 +40,7 @@ let hostName = 'com.persepolis.pdmchromewrapper';
 let chromeVersion;
 let keywords = [];
 
-
-if(isChrome){
-    try {
-        chromeVersion = /Chrome\/([0-9]+)/.exec(navigator.userAgent)[1];
-    } catch (ex) {
-        chromeVersion = 33;
-    }
-}
-
-
-chromeVersion = parseInt(chromeVersion);
-sendMessageToHost({ version: "1.1.6" });
+sendMessageToHost({ version: "1.3" });
 
 if (localStorage["pdm-keywords"]) {
     keywords = localStorage["pdm-keywords"].split(/[\s,]+/);
@@ -83,13 +72,26 @@ let message = {
 
 
 function getCookies(url,callback) {
-    BrowserNameSpace.cookies.getAll({url:url},function (cookies) {
-        let cookieArray = [];
-        for(let i=0;i<cookies.length;i++){
-            cookieArray.push(cookies[i].name + "=" + cookies[i].value);
-        }
-        callback(cookieArray.join(";"));
-    });
+
+    if(isChrome){
+        BrowserNameSpace.cookies.getAll({url:url},function (cookies) {
+            let cookieArray = [];
+            for(let cookie of cookies){
+                cookieArray.push(cookie.name + "=" + cookie.value);
+            }
+            callback(cookieArray.join(";"));
+        });
+    }else if(isFF){
+        BrowserNameSpace.cookies.getAll({url:url}).then(function (cookies) {
+            let cookieArray = [];
+            for(let cookie of cookies){
+                cookieArray.push(cookie.name + "=" + cookie.value);
+            }
+            callback(cookieArray.join(";"));
+        });
+    }
+
+
 }
 
 
@@ -101,10 +103,8 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 
         let links = request.message;
         getCookies(sender.url,function (cookies){
-
             let usedLinks =[];
-            for(let i=0;i<links.length;i++){
-                let link = links[i];
+            for(let link of links){
                 //Check if we already didnt send this link
                 if(usedLinks.indexOf(link) == -1){
                     clearMessage();
@@ -114,7 +114,6 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                     message.cookies  = cookies;
                     console.log(cookies);
                     sendMessageToHost(message);
-
                 }
             }
             clearMessage();
@@ -143,6 +142,7 @@ function sendMessageToHost(message) {
     });
 }
 
+//Clear message :|
 function clearMessage() {
     message.url = '';
     message.cookies = '';
@@ -150,14 +150,6 @@ function clearMessage() {
     message.filesize = '';
     message.referrer = '';
     message.useragent = '';
-}
-
-function postParams(source) {
-    let array = [];
-    for (let key in source) {
-        array.push(encodeURIComponent(key) + '=' + encodeURIComponent(source[key]));
-    }
-    return array.join('&');
 }
 
 //Add download with persepolis to context menu
@@ -187,12 +179,18 @@ BrowserNameSpace.contextMenus.create({
 BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
     "use strict";
     if (info.menuItemId === "download_with_pdm") {
-        clearMessage();
-        message.url = info['linkUrl'];
-        message.referrer = info['pageUrl'];
-        message.cookies  = info['cookies'];
-        sendMessageToHost(message);
-        clearMessage();
+        let url = info['linkUrl'].substr(0,info['linkUrl'].indexOf("/",8)+1);
+        console.log(info['linkUrl']);
+        console.log(url);
+        getCookies(url,function (cookies){
+            console.log(cookies);
+            clearMessage();
+            message.url = info['linkUrl'];
+            message.referrer = info['pageUrl'];
+            message.cookies  = cookies;
+            sendMessageToHost(message);
+            clearMessage();
+        });
     }else if(info.menuItemId ==="download_links_with_pdm"){
         BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
     }else if(info.menuItemId ==="download_all_links_with_pdm"){
@@ -227,36 +225,18 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
     BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
     BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
+    getCookies(url,function(cookies){
+        clearMessage();
+        message.url = url;
+        message.cookies = cookies;
+        message.referrer = downloadItem['referrer'];
+        sendMessageToHost(message);
+    });
 
-    clearMessage();
-    message.url = url;
     //message.filename = downloadItem['filename']; Let Persepolis find download name
     //message.fileSize = downloadItem['fileSize']; Let Persepolis find download fileSize
     //message.filesize = fileSize;
-    message.referrer = downloadItem['referrer'];
-    sendMessageToHost(message);
 });
-
-// BrowserNameSpace.webRequest.onBeforeRequest.addListener(function(details) {
-//     if (details.method == 'POST') {
-//         message.postdata = postParams(details.requestBody.formData);
-//     }
-//     return {
-//         requestHeaders: details.requestHeaders
-//     };
-// }, {
-//     urls: [
-//         '<all_urls>'
-//     ],
-//     types: [
-//         'main_frame',
-//         'sub_frame'
-//     ]
-// }, [
-//     'blocking',
-//     'requestBody'
-// ]);
-
 
 function updateKeywords(data) {
     keywords = data.split(/[\s,]+/);

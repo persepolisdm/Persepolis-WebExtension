@@ -1,5 +1,8 @@
-
-const BrowserNameSpace = chrome;
+let BrowserNameSpace;
+if(typeof browser !== 'undefined' )
+    BrowserNameSpace = browser ;
+else if(typeof chrome !== 'undefined' )
+    BrowserNameSpace = chrome;
 
 
 function sendToExtension(msg) {
@@ -9,11 +12,11 @@ function sendToExtension(msg) {
     });
 }
 
-var links = [];
+let links = [];
 
 //Get links of anchor tags
-var anchor_elements = document.querySelectorAll("a");
-for(var i=0; i<anchor_elements.length; i++) {
+let anchor_elements = document.querySelectorAll("a");
+for(let i=0; i<anchor_elements.length; i++) {
     links.push(anchor_elements[i].href);
 }
 

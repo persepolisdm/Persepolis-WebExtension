@@ -19,12 +19,15 @@
 */
 
 
-const BrowserNameSpace = chrome;
+if(typeof browser !== 'undefined' )
+    BrowserNameSpace = browser ;
+else if(typeof chrome !== 'undefined' )
+    BrowserNameSpace = chrome;
 
 
 function addBookmark() {
-    var keywords = document.getElementById("keywords").value;
-    var interrupt = document.getElementById('chk-interrupt').checked;
+    let keywords = document.getElementById("keywords").value;
+    let interrupt = document.getElementById('chk-interrupt').checked;
 
     localStorage["pdm-keywords"] = keywords;
 
@@ -38,7 +41,7 @@ function addBookmark() {
 
 // When the popup HTML has loaded
 window.addEventListener('load', function(evt) {
-	var interrupt = (localStorage["pdm-interrupt"] == "true");
+	let interrupt = (localStorage["pdm-interrupt"] == "true");
     document.getElementById('save').addEventListener('click', addBookmark);
     document.getElementById('keywords').value = localStorage["pdm-keywords"];
     document.getElementById('chk-interrupt').checked = interrupt;
