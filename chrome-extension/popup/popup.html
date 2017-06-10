@@ -18,34 +18,35 @@
 ~ along with this program.  If not, see <http://www.gnu.org/licenses/>. -->
 
 <html>
-
 <head>
-    <script src="popup.js"></script>
-    <link rel="stylesheet" type="text/css" href="popup.css">
+    <script src="js/popup.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/popup.css">
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+    <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
 </head>
-
 <body>
-    <div id="parent-container">
-        <div id="title-container">
-            <img id="img-icon" src="../icons/icon_48.png" /> <span>Persepolis Download Manager</span>
-        </div>
-        <hr>
-        <div id="controls-container" class="inline">
-            <label title="Ctrl + Shift + U" for="switch">Interrupt downloads:&nbsp;</label>
-            <label class="switch">
-                <input id="chk-interrupt" type="checkbox" checked="false">
-                <div class="slider round"></div>
-            </label>
-        </div>
-        <br>
-        <div id="controls-container">
-            <label for="keywords">Exclude URLs containing:</label>
-            <input title="Separate values by comma (Eg: github.com, .jpg)" type="text" id="keywords" name="keywords" size="50" value="" />
-        </div>
-        <div id="button-container">
-            <input type="button" value="Save" id="save" />
-        </div>
+    <div class="container cont">
+      <div class="row">
+        <img id="img-icon" src="../icons/icon_48.png" /><h5 class="title-text"><a target="_blank" href="http://persepolisdm.github.io"> Persepolis Download Manager</a></h5>
+      </div>
+      <hr class="hr">
+      <label title="Ctrl + Shift + U" for="switch"><p>Interrupt downloads:</p></label>
+      <div class="switch">
+        <label>
+          Off
+          <input type="checkbox" id="chk-interrupt">
+          <span class="lever"></span>
+          On
+        </label>
+      </div>
+      <br>
+      <label for="keywords"><p>Exclude URLs containing:</p></label>
+      <div class="input-field">
+        <i class="material-icons prefix">http</i>
+        <input id="keywords" type="text" placeholder="Eg: .jpg,.png"  class="validate">
+      </div>
+      <a class="btn-floating btn-large waves-effect waves-light red right"><i id="save" class="material-icons">done</i></a>
     </div>
 </body>
-
 </html>
