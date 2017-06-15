@@ -10,12 +10,6 @@ function sendToExtension(msg) {
         message: msg
     });
 }
-function sendToExtension(msg) {
-    BrowserNameSpace.runtime.sendMessage({
-        type:"getSelected",
-        message: msg
-    });
-}
 
 let selectedNode = window.getSelection().getRangeAt(0).cloneContents();
 let nodes = selectedNode.querySelectorAll("a");

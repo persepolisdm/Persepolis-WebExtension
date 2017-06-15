@@ -19,8 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+//Broswer identifying
 let BrowserNameSpace;
 let isChrome=false,isFF=false;
+
+const DEBUG = true;
+
+
+function UrlMessage() {
+    this.url= '';
+    this.cookies= '';
+    this.useragent= '';
+    this.filename= '';
+    this.filesize= '';
+    this.referrer= '';
+    this.postdata= '';
+}
+
+
 if(typeof browser !== 'undefined' ){
     BrowserNameSpace = browser ;
     isFF=true;
@@ -31,16 +48,22 @@ else if(typeof chrome !== 'undefined' ){
 }
 
 
+function l(msg) {
+    if(DEBUG)
+        console.log(msg);
+}
+
 
 let interruptDownloads = true;
-let ugetWrapperNotFound = false;
+let PDMNotFound = false;
 let interruptDownload = false;
-let disposition = '';
 let hostName = 'com.persepolis.pdmchromewrapper';
-let chromeVersion;
 let keywords = [];
 
-sendMessageToHost({ version: "1.3" });
+
+SendInitMessage();
+
+
 
 if (localStorage["pdm-keywords"]) {
     keywords = localStorage["pdm-keywords"].split(/[\s,]+/);
@@ -57,24 +80,63 @@ if (!localStorage["pdm-interrupt"]) {
 }
 
 
-//console.log(localStorage["pdm-interrupt"]);
-// Message format to send the download information to the pdm-chrome-wrapper
-let message = {
-    url: '',
-    cookies: '',
-    useragent: '',
-    filename: '',
-    filesize: '',
-    referrer: '',
-    postdata: ''
-};
 
+function getDomain(url){
+
+    var TLDs = ["ac", "ad", "ae", "aero", "af", "ag", "ai", "al", "am", "an", "ao", "aq", "ar", "arpa", "as", "asia", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "biz", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bv", "bw", "by", "bz", "ca", "cat", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "com", "coop", "cr", "cu", "cv", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec", "edu", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm", "fo", "fr", "ga", "gb", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gov", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "info", "int", "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jobs", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mg", "mh", "mil", "mk", "ml", "mm", "mn", "mo", "mobi", "mp", "mq", "mr", "ms", "mt", "mu", "museum", "mv", "mw", "mx", "my", "mz", "na", "name", "nc", "ne", "net", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om", "org", "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "pro", "ps", "pt", "pw", "py", "qa", "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sj", "sk", "sl", "sm", "sn", "so", "sr", "st", "su", "sv", "sy", "sz", "tc", "td", "tel", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tp", "tr", "travel", "tt", "tv", "tw", "tz", "ua", "ug", "uk", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "xn--0zwm56d", "xn--11b5bs3a9aj6g", "xn--3e0b707e", "xn--45brj9c", "xn--80akhbyknj4f", "xn--90a3ac", "xn--9t4b11yi5a", "xn--clchc0ea0b2g2a9gcd", "xn--deba0ad", "xn--fiqs8s", "xn--fiqz9s", "xn--fpcrj9c3d", "xn--fzc2c9e2c", "xn--g6w251d", "xn--gecrj9c", "xn--h2brj9c", "xn--hgbk6aj7f53bba", "xn--hlcj6aya9esc7a", "xn--j6w193g", "xn--jxalpdlp", "xn--kgbechtv", "xn--kprw13d", "xn--kpry57d", "xn--lgbbat1ad8j", "xn--mgbaam7a8h", "xn--mgbayh7gpa", "xn--mgbbh1a71e", "xn--mgbc0a9azcg", "xn--mgberp4a5d4ar", "xn--o3cw4h", "xn--ogbpf8fl", "xn--p1ai", "xn--pgbs0dh", "xn--s9brj9c", "xn--wgbh1c", "xn--wgbl6a", "xn--xkc2al3hye2a", "xn--xkc2dl3a5ee0h", "xn--yfro4i67o", "xn--ygbi2ammx", "xn--zckzah", "xxx", "ye", "yt", "za", "zm", "zw"].join()
+
+    url = url.replace(/.*?:\/\//g, "");
+    url = url.replace(/www./g, "");
+    var parts = url.split('/');
+    url = parts[0];
+    var parts = url.split('.');
+    if (parts[0] === 'www' && parts[1] !== 'com'){
+        parts.shift()
+    }
+    var ln = parts.length
+        , i = ln
+        , minLength = parts[parts.length-1].length
+        , part
+
+    // iterate backwards
+    while(part = parts[--i]){
+        // stop when we find a non-TLD part
+        if (i === 0                    // 'asia.com' (last remaining must be the SLD)
+            || i < ln-2                // TLDs only span 2 levels
+            || part.length < minLength // 'www.cn.com' (valid TLD as second-level domain)
+            || TLDs.indexOf(part) < 0  // officialy not a TLD
+        ){
+            var actual_domain = part;
+            break;
+            //return part
+        }
+    }
+    //console.log(actual_domain);
+    var tid ;
+    if(typeof parts[ln-1] != 'undefined' && TLDs.indexOf(parts[ln-1]) >= 0)
+    {
+        tid = '.'+parts[ln-1];
+    }
+    if(typeof parts[ln-2] != 'undefined' && TLDs.indexOf(parts[ln-2]) >= 0)
+    {
+        tid = '.'+parts[ln-2]+tid;
+    }
+    if(typeof tid != 'undefined')
+        actual_domain = actual_domain+tid;
+    else
+        actual_domain = actual_domain+'.com';
+
+
+    return actual_domain;
+}
 
 
 function getCookies(url,callback) {
+    let domain = getDomain(url);
+    let Query = {domain:domain};
 
     if(isChrome){
-        BrowserNameSpace.cookies.getAll({url:url},function (cookies) {
+        BrowserNameSpace.cookies.getAll(Query,(cookies)=>{
             let cookieArray = [];
             for(let cookie of cookies){
                 cookieArray.push(cookie.name + "=" + cookie.value);
@@ -82,7 +144,7 @@ function getCookies(url,callback) {
             callback(cookieArray.join(";"));
         });
     }else if(isFF){
-        BrowserNameSpace.cookies.getAll({url:url}).then(function (cookies) {
+        BrowserNameSpace.cookies.getAll(Query).then((cookies)=>{
             let cookieArray = [];
             for(let cookie of cookies){
                 cookieArray.push(cookie.name + "=" + cookie.value);
@@ -90,11 +152,26 @@ function getCookies(url,callback) {
             callback(cookieArray.join(";"));
         });
     }
-
-
 }
 
 
+function setCookies(message,callback) {
+    message.useragent = navigator.userAgent;
+    getCookies(message.url,urlCookie=>{
+        message.cookies = urlCookie+";";
+        if(DEBUG)
+            console.log(message.cookies);
+        if(message.referrer !="")
+            getCookies(message.referrer,refererCookies=>{
+                message.cookies += refererCookies+";";
+                if(DEBUG)
+                    console.log(message.cookies);
+                callback(message);
+            });
+        else
+            callback(message);
+    });
+}
 
 //chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -102,22 +179,20 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
     if(type === "getSelected" || type === "getAll"){
 
         let links = request.message;
-        getCookies(sender.url,function (cookies){
-            let usedLinks =[];
-            for(let link of links){
-                //Check if we already didnt send this link
-                if(usedLinks.indexOf(link) == -1){
-                    clearMessage();
-                    usedLinks.push(link); //Add link to used link so we won't use it again
-                    message.url = link;
-                    message.referrer = sender.url;
-                    message.cookies  = cookies;
-                    console.log(cookies);
-                    sendMessageToHost(message);
-                }
+        let usedLinks = [];
+        l("enterted " + type);
+
+        for(let link of links){
+            //Check if we already didnt send this link
+            if(link !="" && usedLinks.indexOf(link) == -1){
+                usedLinks.push(link); //Add link to used link so we won't use it again
+                let msg = new UrlMessage();
+                msg.url = link;
+                msg.referrer = sender.url;
+                l("Sending...");
+                SendURLMessage(msg);
             }
-            clearMessage();
-        });
+        }
     }
     else if(type == "keyPress"){
         let msg = request.message;
@@ -134,23 +209,30 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
     }
 });
 
-// Send message to the pdm-chrome-wrapper
-function sendMessageToHost(message) {
-    BrowserNameSpace.runtime.sendNativeMessage(hostName, message, function(response) {
-        ugetWrapperNotFound = (response == null);
-        console.log(response);
+
+//Send URL to the pdm-chrome-wrapper
+function SendURLMessage(message) {
+
+    setCookies(message, (cookie_with_message) => {
+        l("Cookies set...");
+        SendCustomMessage(cookie_with_message);
     });
 }
 
-//Clear message :|
-function clearMessage() {
-    message.url = '';
-    message.cookies = '';
-    message.filename = '';
-    message.filesize = '';
-    message.referrer = '';
-    message.useragent = '';
+
+function SendInitMessage(){
+    SendCustomMessage({ version: "1.3" });
 }
+
+//Crafter for sending message to PDM
+function SendCustomMessage(data,callback){
+    l(data);
+    BrowserNameSpace.runtime.sendNativeMessage(hostName, data,(response) =>{
+        l(response);
+        callback && callback(response); //Call the callback with response if it's available
+    });
+}
+
 
 //Add download with persepolis to context menu
 BrowserNameSpace.contextMenus.create({
@@ -179,18 +261,11 @@ BrowserNameSpace.contextMenus.create({
 BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
     "use strict";
     if (info.menuItemId === "download_with_pdm") {
-        let url = info['linkUrl'].substr(0,info['linkUrl'].indexOf("/",8)+1);
-        console.log(info['linkUrl']);
-        console.log(url);
-        getCookies(url,function (cookies){
-            console.log(cookies);
-            clearMessage();
-            message.url = info['linkUrl'];
-            message.referrer = info['pageUrl'];
-            message.cookies  = cookies;
-            sendMessageToHost(message);
-            clearMessage();
-        });
+        l(info['linkUrl']);
+        let msg = new UrlMessage();
+        msg.url = info['linkUrl'];
+        msg.referrer = info['pageUrl'];
+        SendURLMessage(msg);
     }else if(info.menuItemId ==="download_links_with_pdm"){
         BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
     }else if(info.menuItemId ==="download_all_links_with_pdm"){
@@ -203,39 +278,29 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
 // Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
-    if (ugetWrapperNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
+    debugger;
+    if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
         return;
     }
 
     let fileSize = downloadItem['fileSize'];
 
-    if (fileSize != -1 /*&& fileSize < 300000*/) {
+    if (fileSize == -1 /*&& fileSize < 300000*/) {
         return;
     }
 
-    let url = url = downloadItem['finalUrl'];
+    let url = downloadItem['finalUrl'];
 
-    if (!url) {
-        return;
-    }
-
-    if (isBlackListed(url)) {
+    if (!url || isBlackListed(url)) {
         return;
     }
 
     BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
     BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
-    getCookies(url,function(cookies){
-        clearMessage();
-        message.url = url;
-        message.cookies = cookies;
-        message.referrer = downloadItem['referrer'];
-        sendMessageToHost(message);
-    });
-
-    //message.filename = downloadItem['filename']; Let Persepolis find download name
-    //message.fileSize = downloadItem['fileSize']; Let Persepolis find download fileSize
-    //message.filesize = fileSize;
+    let msg = new UrlMessage();
+    msg.url = url;
+    msg.referrer = downloadItem['referrer'];
+    SendURLMessage(msg);
 });
 
 function updateKeywords(data) {
