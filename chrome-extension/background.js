@@ -285,11 +285,13 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
     let fileSize = downloadItem['fileSize'];
 
-    if (fileSize == -1 /*&& fileSize < 300000*/) {
+    /*
+    if (fileSize == -1 && fileSize < 300000) {
         return;
     }
+    */
 
-    let url = downloadItem['finalUrl'];
+    let url = downloadItem['finalUrl'] || downloadItem['url'] ;
 
     if (!url || isBlackListed(url)) {
         return;
