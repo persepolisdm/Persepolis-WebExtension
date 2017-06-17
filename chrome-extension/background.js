@@ -24,7 +24,7 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
-const DEBUG = true;
+const DEBUG = false;
 
 
 function UrlMessage() {
@@ -181,7 +181,6 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
         let links = request.message;
         let usedLinks = [];
         l("enterted " + type);
-
         for(let link of links){
             //Check if we already didnt send this link
             if(link !="" && usedLinks.indexOf(link) == -1){
@@ -278,7 +277,6 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
 // Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
-    debugger;
     if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
         return;
     }
