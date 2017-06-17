@@ -48,7 +48,7 @@ else if(typeof chrome !== 'undefined' ){
 }
 
 
-function l(msg) {
+function L(msg) {
     if(DEBUG)
         console.log(msg);
 }
@@ -159,13 +159,11 @@ function setCookies(message,callback) {
     message.useragent = navigator.userAgent;
     getCookies(message.url,urlCookie=>{
         message.cookies = urlCookie+";";
-        if(DEBUG)
-            console.log(message.cookies);
+        L(message.cookies);
         if(message.referrer !="")
             getCookies(message.referrer,refererCookies=>{
                 message.cookies += refererCookies+";";
-                if(DEBUG)
-                    console.log(message.cookies);
+                L(message.cookies);
                 callback(message);
             });
         else
@@ -180,7 +178,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 
         let links = request.message;
         let usedLinks = [];
-        l("enterted " + type);
+        L("enterted " + type);
         for(let link of links){
             //Check if we already didnt send this link
             if(link !="" && usedLinks.indexOf(link) == -1){
@@ -188,7 +186,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                 let msg = new UrlMessage();
                 msg.url = link;
                 msg.referrer = sender.url;
-                l("Sending...");
+                L("Sending...");
                 SendURLMessage(msg);
             }
         }
@@ -213,7 +211,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 function SendURLMessage(message) {
 
     setCookies(message, (cookie_with_message) => {
-        l("Cookies set...");
+        L("Cookies set...");
         SendCustomMessage(cookie_with_message);
     });
 }
@@ -225,9 +223,9 @@ function SendInitMessage(){
 
 //Crafter for sending message to PDM
 function SendCustomMessage(data,callback){
-    l(data);
+    L(data);
     BrowserNameSpace.runtime.sendNativeMessage(hostName, data,(response) =>{
-        l(response);
+        L(response);
         callback && callback(response); //Call the callback with response if it's available
     });
 }
@@ -260,7 +258,7 @@ BrowserNameSpace.contextMenus.create({
 BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
     "use strict";
     if (info.menuItemId === "download_with_pdm") {
-        l(info['linkUrl']);
+        L(info['linkUrl']);
         let msg = new UrlMessage();
         msg.url = info['linkUrl'];
         msg.referrer = info['pageUrl'];
