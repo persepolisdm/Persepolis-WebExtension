@@ -290,7 +290,7 @@ if(isChrome){
 
         let url = downloadItem['finalUrl'] || downloadItem['url'] ;
         let fileName = downloadItem['filename'];
-        let extension = fileName.split(",").pop();
+        let extension = fileName.split(".").pop();
 
         if(!url || isBlackListed(url) || (fileName !="" && isBlackListed(extension))){
             suggest();
@@ -332,10 +332,14 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         return;
     }
     if(isFF){
-        if(""!=downloadItem['filename'] && isBlackListed(downloadItem['filename']) ){
+
+        let url = downloadItem['finalUrl'] || downloadItem['url'] ;
+        let fileName = downloadItem['filename'];
+        let extension = fileName.split(".").pop();
+
+        if(isBlackListed(url) || (fileName !="" && isBlackListed(extension))){
             return;
         }
-
 
         BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
         BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
