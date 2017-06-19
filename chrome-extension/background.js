@@ -24,7 +24,13 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
+
 const DEBUG = false;
+
+
+
+//let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
+
 
 
 function UrlMessage() {
@@ -160,7 +166,7 @@ function setCookies(message,callback) {
     getCookies(message.url,urlCookie=>{
         message.cookies = urlCookie+";";
         L(message.cookies);
-        if(message.referrer !="")
+        if(message.referrer != null && message.referrer !="")
             getCookies(message.referrer,refererCookies=>{
                 message.cookies += refererCookies+";";
                 L(message.cookies);
@@ -272,6 +278,35 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
 
 
 
+if(isChrome){
+    //Finding files types in chrome is not like firefox
+    //Cause firefox first find file type then start download but chrome has another event
+    BrowserNameSpace.downloads.onDeterminingFilename.addListener( (downloadItem,suggest)=>{
+
+        if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
+            suggest();
+            return;
+        }
+
+        let url = downloadItem['finalUrl'] || downloadItem['url'] ;
+        let fileName = downloadItem['filename'];
+        let extension = fileName.split(",").pop();
+
+        if(!url || isBlackListed(url) || (fileName !="" && isBlackListed(extension))){
+            suggest();
+        }else{
+            BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
+            BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
+            let msg = new UrlMessage();
+            msg.url = url;
+            msg.referrer = downloadItem['referrer'];
+            SendURLMessage(msg);
+        }
+    });
+}
+
+
+
 // Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
@@ -279,30 +314,48 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         return;
     }
 
-    let fileSize = downloadItem['fileSize'];
 
     /*
-    if (fileSize == -1 && fileSize < 300000) {
-        return;
-    }
-    */
+     let fileSize = downloadItem['fileSize'];
+     if (fileSize == -1 && fileSize < 300000) {
+     return;
+     }
+     */
 
     let url = downloadItem['finalUrl'] || downloadItem['url'] ;
 
-    if (!url || isBlackListed(url)) {
+    if (!url) {
         return;
     }
 
-    BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
-    BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
-    let msg = new UrlMessage();
-    msg.url = url;
-    msg.referrer = downloadItem['referrer'];
-    SendURLMessage(msg);
+    if(isBlackListed(url)){
+        return;
+    }
+    if(isFF){
+        if(""!=downloadItem['filename'] && isBlackListed(downloadItem['filename']) ){
+            return;
+        }
+
+
+        BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
+        BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
+        let msg = new UrlMessage();
+        msg.url = url;
+        msg.referrer = downloadItem['referrer'];
+        SendURLMessage(msg);
+
+    }
 });
 
 function updateKeywords(data) {
-    keywords = data.split(/[\s,]+/);
+    keywords = data.toLowerCase().split(/[\s,]+/);
+    for(let i=0;i<keywords.length;i++){
+        let tmp = keywords[i].trim();
+        if(tmp ==""){
+            keywords.splice(i,1);
+            i--;
+        }
+    }
 }
 
 function isBlackListed(url) {
@@ -310,7 +363,7 @@ function isBlackListed(url) {
      return true;
      }*/
     for (keyword of keywords) {
-        if (url.includes(keyword)) {
+        if (url != "" && url.includes(keyword)) {
             return true;
         }
     }
