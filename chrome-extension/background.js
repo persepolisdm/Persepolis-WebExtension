@@ -25,7 +25,7 @@ let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
 
-const DEBUG = false;
+const DEBUG = true;
 
 
 
@@ -43,6 +43,22 @@ function UrlMessage() {
     this.postdata= '';
 }
 
+function arrayUnique(array) {
+    var a = array.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+    }
+
+    return a;
+}
+
+//if str was encoded, return it. otherwise return encoded str
+function denCode(str){
+    return decodeURIComponent(str) !== str ? str : encodeURI(str);
+}
 
 if(typeof browser !== 'undefined' ){
     BrowserNameSpace = browser ;
@@ -138,24 +154,55 @@ function getDomain(url){
 
 
 function getCookies(url,callback) {
-    let domain = getDomain(url);
-    let Query = {domain:domain};
+    //let domain = getDomain(url); This function was one of the best functions i've ever seen, but now it's uselss. I'll not delete it because i love it... I want to spread it to world using persepolis ... RIP my friend
+    //let domainQuery= {domain:domain};
+    let urlQuery = {url:url};
 
     if(isChrome){
-        BrowserNameSpace.cookies.getAll(Query,(cookies)=>{
-            let cookieArray = [];
-            for(let cookie of cookies){
-                cookieArray.push(cookie.name + "=" + cookie.value);
-            }
-            callback(cookieArray.join(";"));
+        BrowserNameSpace.cookies.getAll(urlQuery,(urlcookies)=>{
+            cookieArray = urlcookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+            L("2:");
+            L(cookieArray);
+            callback(cookieArray);
         });
+
+        // BrowserNameSpace.cookies.getAll(domainQuery,(cookies)=>{
+        //     let cookieArray = [];
+        //     for(let cookie of cookies){
+        //         cookieArray.push(denCode(cookie.name)+ "=" + denCode(cookie.value));
+        //     }
+        //     L("1:");
+        //     L(cookieArray);
+        //     BrowserNameSpace.cookies.getAll(urlQuery,(urlcookies)=>{
+        //         cookieArray = [];
+        //         for(let cookie of urlcookies){
+        //             cookieArray.push(denCode(cookie.name)+ "=" + denCode(cookie.value));
+        //         }
+        //         L("2:");
+        //         L(cookieArray);
+        //         callback(cookieArray);
+        //     });
+        // });
     }else if(isFF){
-        BrowserNameSpace.cookies.getAll(Query).then((cookies)=>{
-            let cookieArray = [];
-            for(let cookie of cookies){
-                cookieArray.push(cookie.name + "=" + cookie.value);
-            }
-            callback(cookieArray.join(";"));
+        BrowserNameSpace.cookies.getAll(urlQuery).then((cookies)=>{
+            cookieArray = cookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+            L("2:");
+            L(cookieArray);
+            callback(cookieArray);
+        // BrowserNameSpace.cookies.getAll(domainQuery).then((cookies)=>{
+        //     let cookieArray = [];
+        //     for(let cookie of cookies){
+        //         cookieArray.push(cookie.name + "=" + cookie.value);
+        //     }
+        //     BrowserNameSpace.cookies.getAll(urlQuery).then((cookies)=>{
+        //         let cookieArray = [];
+        //         for(let cookie of cookies){
+        //             cookieArray.push(cookie.name + "=" + cookie.value);
+        //         }
+        //         callback(cookieArray);
+        //         //callback(cookieArray.join("; "));
+        //     });
+        //     //callback(cookieArray.join("; "));
         });
     }
 }
@@ -164,16 +211,25 @@ function getCookies(url,callback) {
 function setCookies(message,callback) {
     message.useragent = navigator.userAgent;
     getCookies(message.url,urlCookie=>{
-        message.cookies = urlCookie+";";
-        L(message.cookies);
-        if(message.referrer != null && message.referrer !="")
+        message.cookies = urlCookie;
+        //I know it's always false, at first it looked good but not now. so i saved the code for future jobless source code viewers like you
+        if(false && message.referrer != null && message.referrer !=""){
             getCookies(message.referrer,refererCookies=>{
-                message.cookies += refererCookies+";";
+                //if(message.cookies != refererCookies)
+                //message.cookies += "; "+refererCookies;//(message.cookies == refererCookies) ? "" : ("; "+refererCookies);
+                message.cookies = arrayUnique(message.cookies.concat(refererCookies)).join("; ");
+                L("final cookies With referer:");
                 L(message.cookies);
                 callback(message);
             });
-        else
+        }else{
+            message.cookies = arrayUnique(message.cookies).join("; ");
+            L("final cookies Without referer:");
+            L(message.cookies);
             callback(message);
+        }
+
+
     });
 }
 
@@ -215,7 +271,6 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 
 //Send URL to the pdm-chrome-wrapper
 function SendURLMessage(message) {
-
     setCookies(message, (cookie_with_message) => {
         L("Cookies set...");
         SendCustomMessage(cookie_with_message);
