@@ -57,6 +57,7 @@ function arrayUnique(array) {
 
 //if str was encoded, return it. otherwise return encoded str
 function denCode(str){
+    //return encodeURIComponent(decodeURIComponent(str));
     return decodeURIComponent(str) !== str ? str : encodeURI(str);
 }
 
@@ -154,13 +155,21 @@ function getDomain(url){
 
 
 function getCookies(url,callback) {
-    //let domain = getDomain(url); This function was one of the best functions i've ever seen, but now it's uselss. I'll not delete it because i love it... I want to spread it to world using persepolis ... RIP my friend
+    let domain = getDomain(url);// This function was one of the best functions i've ever seen, but now it's uselss. I'll not delete it because i love it... I want to spread it to world using persepolis ... RIP my friend
     //let domainQuery= {domain:domain};
     let urlQuery = {url:url};
 
+    let blacklistDecode = [
+        "mycdn.me"
+    ];
+
     if(isChrome){
         BrowserNameSpace.cookies.getAll(urlQuery,(urlcookies)=>{
-            cookieArray = urlcookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+            let cookieArray = [];
+            if (blacklistDecode.indexOf(domain)  == -1)
+                cookieArray = urlcookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+            else
+                cookieArray = urlcookies.map((cookie)=>{return cookie.name+ "=" + cookie.value});
             L("2:");
             L(cookieArray);
             callback(cookieArray);
@@ -184,8 +193,12 @@ function getCookies(url,callback) {
         //     });
         // });
     }else if(isFF){
-        BrowserNameSpace.cookies.getAll(urlQuery).then((cookies)=>{
-            cookieArray = cookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+        BrowserNameSpace.cookies.getAll(urlQuery).then((urlcookies)=>{
+            let cookieArray = [];
+            if (blacklistDecode.indexOf(domain)  == -1)
+                cookieArray = urlcookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+            else
+                cookieArray = urlcookies.map((cookie)=>{return cookie.name+ "=" + cookie.value});
             L("2:");
             L(cookieArray);
             callback(cookieArray);
@@ -279,7 +292,7 @@ function SendURLMessage(message) {
 
 
 function SendInitMessage(){
-    SendCustomMessage({ version: "1.3" });
+    SendCustomMessage({ version: "1.5" });
 }
 
 //Crafter for sending message to PDM
