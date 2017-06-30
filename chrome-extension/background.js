@@ -25,7 +25,7 @@ let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
 
-const DEBUG = true;
+const DEBUG = false;
 
 
 
