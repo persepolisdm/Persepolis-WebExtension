@@ -24,10 +24,7 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
-
 const DEBUG = false;
-
-
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
 
@@ -167,9 +164,9 @@ function getCookies(url,callback) {
         BrowserNameSpace.cookies.getAll(urlQuery,(urlcookies)=>{
             let cookieArray = [];
             if (blacklistDecode.indexOf(domain)  == -1)
-                cookieArray = urlcookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
+                cookieArray = urlcookies.map((cookie)=>denCode(cookie.name)+ "=" + denCode(cookie.value));
             else
-                cookieArray = urlcookies.map((cookie)=>{return cookie.name+ "=" + cookie.value});
+                cookieArray = urlcookies.map((cookie)=>cookie.name+ "=" + cookie.value);
             L("2:");
             L(cookieArray);
             callback(cookieArray);
@@ -434,6 +431,9 @@ function isBlackListed(url) {
     /*if (url.includes("//docs.google.com/") || url.includes("googleusercontent.com/docs")) { // Cannot download from Google Docs
      return true;
      }*/
+    if (url.startsWith("blob://"))
+        return true;
+
     for (keyword of keywords) {
         if (url != "" && url.includes(keyword)) {
             return true;
