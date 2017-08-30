@@ -25,24 +25,26 @@ else if(typeof chrome !== 'undefined' )
     BrowserNameSpace = chrome;
 
 
-function addBookmark() {
-    let keywords = document.getElementById("keywords").value;
-    let interrupt = document.getElementById('chk-interrupt').checked;
-
+function saveSettings() {
+    let keywords = keywordsDom.val();
+    let interrupt = chkDom.checked;
     localStorage["pdm-keywords"] = keywords;
-
     BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
         backgroundPage.updateKeywords(keywords);
         backgroundPage.setInterruptDownload(interrupt, true);
     });
-
     window.close();
 }
+let keywordsDom,chkDom;
+//Do after load
+$(document).ready(function () {
+    keywordsDom = $('#keywords');
+    chkDom = $('#chk-interrupt');
 
-// When the popup HTML has loaded
-window.addEventListener('load', function(evt) {
-	let interrupt = (localStorage["pdm-interrupt"] == "true");
-    document.getElementById('save').addEventListener('click', addBookmark);
-    document.getElementById('keywords').value = localStorage["pdm-keywords"];
-    document.getElementById('chk-interrupt').checked = interrupt;
+    keywordsDom.on("change",saveSettings);
+    chkDom.on("change",saveSettings);
+    
+    let interrupt = (localStorage["pdm-interrupt"] == "true");
+    keywordsDom.val(localStorage["pdm-keywords"]);
+    chkDom.checked = interrupt;
 });

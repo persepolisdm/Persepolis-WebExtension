@@ -19,11 +19,12 @@
 
 <html>
 <head>
-    <script src="js/popup.js"></script>
+
     <link rel="stylesheet" type="text/css" href="css/popup.css">
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
     <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/popup.js"></script>
 </head>
 <body>
     <div class="container cont">
@@ -44,9 +45,10 @@
       <label for="keywords"><p>Exclude URLs containing:</p></label>
       <div class="input-field">
         <i class="material-icons prefix">http</i>
-        <input id="keywords" type="text" placeholder="Eg: .jpg,.png"  class="validate">
-      </div>
-      <a id="save" class="btn-floating btn-large waves-effect waves-light red right"><i class="material-icons">done</i></a>
+        <input id="keywords" type="text" placeholder="Eg: .jpg, .png, twitter.com"  class="validate">
+      </div>Shortcuts:<br>
+        Disable extension temporary: Hold <div class="chip">Insert</div><br>
+        Toggle enable extension: <div class="chip">Ctrl + Shift + U</div><br>
     </div>
 </body>
 </html>
