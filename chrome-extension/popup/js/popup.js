@@ -27,13 +27,13 @@ else if(typeof chrome !== 'undefined' )
 
 function saveSettings() {
     let keywords = keywordsDom.val();
-    let interrupt = chkDom.checked;
+    let interrupt = chkDom.prop('checked');
     localStorage["pdm-keywords"] = keywords;
     BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
         backgroundPage.updateKeywords(keywords);
         backgroundPage.setInterruptDownload(interrupt, true);
     });
-    window.close();
+    //window.close();
 }
 let keywordsDom,chkDom;
 //Do after load
@@ -41,10 +41,13 @@ $(document).ready(function () {
     keywordsDom = $('#keywords');
     chkDom = $('#chk-interrupt');
 
+    let interrupt = (localStorage["pdm-interrupt"] == "true");
+    chkDom.prop('checked',interrupt);
+    keywordsDom.val(localStorage["pdm-keywords"]);
+    console.log(chkDom.checked);
+    console.log(chkDom);
     keywordsDom.on("change",saveSettings);
     chkDom.on("change",saveSettings);
-    
-    let interrupt = (localStorage["pdm-interrupt"] == "true");
-    keywordsDom.val(localStorage["pdm-keywords"]);
-    chkDom.checked = interrupt;
+
+
 });

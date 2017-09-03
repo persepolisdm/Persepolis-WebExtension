@@ -34,10 +34,7 @@ body {
 }
 .cont {
     width: 500px !important;
-    padding-top: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 80px;
+    padding: 20px;
 }
 
 #img-icon {

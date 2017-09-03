@@ -2,8 +2,8 @@
  * Pdm WebExtension (forked from uget-chrome-wrapper ) is an extension to integrate Persepolis Download manager
  * with Google Chrome, Chromium, Firefox and Vivaldi in Linux, Windows and OSX.
  *
- * Copyright (C) 2016  Gobinath
  * Modified copyright (C) 2017  Jafar Akhondali
+ * Copyright (C) 2016  Gobinath
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
-const DEBUG = false;
+const DEBUG = true;
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
 
@@ -35,7 +35,6 @@ function UrlMessage() {
     this.cookies= '';
     this.useragent= '';
     this.filename= '';
-    this.filesize= '';
     this.referrer= '';
     this.postdata= '';
 }
@@ -48,7 +47,6 @@ function arrayUnique(array) {
                 a.splice(j--, 1);
         }
     }
-
     return a;
 }
 
@@ -82,7 +80,6 @@ let keywords = [];
 
 
 SendInitMessage();
-
 
 
 if (localStorage["pdm-keywords"]) {
@@ -243,7 +240,6 @@ function setCookies(message,callback) {
     });
 }
 
-//chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     let type = request.type;
     if(type === "getSelected" || type === "getAll"){
@@ -295,10 +291,12 @@ function SendInitMessage(){
 //Crafter for sending message to PDM
 function SendCustomMessage(data,callback){
     L(data);
+    console.log(BrowserNameSpace);
     BrowserNameSpace.runtime.sendNativeMessage(hostName, data,(response) =>{
         L(response);
         callback && callback(response); //Call the callback with response if it's available
     });
+
 }
 
 
