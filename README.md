@@ -1,8 +1,8 @@
 Forked from [uget-chrome-wrapper](https://github.com/slgobinath/uget-chrome-wrapper)
 
 -----
-# Persepolis Chrome Wrapper
-Integrate Persepolis Download Manager with Google Chrome and chromium. With this tool, Persepolis Download Manager can interrupt and catch your downloads from Google Chrome and Chromium.
+# Persepolis WebExtension
+Integrate Persepolis Download Manager with Chrome\Chromium\FireFox\Opera and any other WebExtension standard browser. With this tool, Persepolis Download Manager can interrupt and catch your downloads browsers or download many links at once.
 
 For more details, visit [Persepolis Github Page](https://github.com/persepolisdm/persepolis)
 
@@ -11,7 +11,7 @@ For more details, visit [Persepolis Github Page](https://github.com/persepolisdm
 ## Contributing
 **Are you a user?**
 
-Please test pdm-chrome-wrapper on your system and report any issues
+Please test Persepolis WebExtension on your system and report any issues
 
 **Are you a developer?**
 
