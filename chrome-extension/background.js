@@ -25,6 +25,7 @@ let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
 const DEBUG = true;
+const VERSION = "1.6";
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
 
@@ -164,28 +165,8 @@ function getCookies(url,callback) {
                 cookieArray = urlcookies.map((cookie)=>denCode(cookie.name)+ "=" + denCode(cookie.value));
             else
                 cookieArray = urlcookies.map((cookie)=>cookie.name+ "=" + cookie.value);
-            L("2:");
-            L(cookieArray);
             callback(cookieArray);
         });
-
-        // BrowserNameSpace.cookies.getAll(domainQuery,(cookies)=>{
-        //     let cookieArray = [];
-        //     for(let cookie of cookies){
-        //         cookieArray.push(denCode(cookie.name)+ "=" + denCode(cookie.value));
-        //     }
-        //     L("1:");
-        //     L(cookieArray);
-        //     BrowserNameSpace.cookies.getAll(urlQuery,(urlcookies)=>{
-        //         cookieArray = [];
-        //         for(let cookie of urlcookies){
-        //             cookieArray.push(denCode(cookie.name)+ "=" + denCode(cookie.value));
-        //         }
-        //         L("2:");
-        //         L(cookieArray);
-        //         callback(cookieArray);
-        //     });
-        // });
     }else if(isFF){
         BrowserNameSpace.cookies.getAll(urlQuery).then((urlcookies)=>{
             let cookieArray = [];
@@ -193,60 +174,57 @@ function getCookies(url,callback) {
                 cookieArray = urlcookies.map((cookie)=>{return denCode(cookie.name)+ "=" + denCode(cookie.value);});
             else
                 cookieArray = urlcookies.map((cookie)=>{return cookie.name+ "=" + cookie.value});
-            L("2:");
             L(cookieArray);
             callback(cookieArray);
-        // BrowserNameSpace.cookies.getAll(domainQuery).then((cookies)=>{
-        //     let cookieArray = [];
-        //     for(let cookie of cookies){
-        //         cookieArray.push(cookie.name + "=" + cookie.value);
-        //     }
-        //     BrowserNameSpace.cookies.getAll(urlQuery).then((cookies)=>{
-        //         let cookieArray = [];
-        //         for(let cookie of cookies){
-        //             cookieArray.push(cookie.name + "=" + cookie.value);
-        //         }
-        //         callback(cookieArray);
-        //         //callback(cookieArray.join("; "));
-        //     });
-        //     //callback(cookieArray.join("; "));
         });
     }
 }
 
 
-function setCookies(message,callback) {
-    message.useragent = navigator.userAgent;
-    getCookies(message.url,urlCookie=>{
-        message.cookies = urlCookie;
-        //I know it's always false, at first it looked good but not now. so i saved the code for future jobless source code viewers like you
-        if(false && message.referrer != null && message.referrer !=""){
-            getCookies(message.referrer,refererCookies=>{
-                //if(message.cookies != refererCookies)
-                //message.cookies += "; "+refererCookies;//(message.cookies == refererCookies) ? "" : ("; "+refererCookies);
-                message.cookies = arrayUnique(message.cookies.concat(refererCookies)).join("; ");
-                L("final cookies With referer:");
-                L(message.cookies);
-                callback(message);
+function setCookies(message) {
+
+    return new Promise(function(ok, fuck) {
+        message.useragent = navigator.userAgent;
+        try{
+            getCookies(message.url, urlCookie=> {
+
+                message.cookies = urlCookie;
+                // if (false && message.referrer != null && message.referrer != "") {
+                //I know it's always false, at first it looked good but not now. so i saved the code for future jobless source code viewers like you
+                //     getCookies(message.referrer, refererCookies=> {
+                //         //if(message.cookies != refererCookies)
+                //         //message.cookies += "; "+refererCookies;//(message.cookies == refererCookies) ? "" : ("; "+refererCookies);
+                //         message.cookies = arrayUnique(message.cookies.concat(refererCookies)).join("; ");
+                //         L("final cookies With referer:");
+                //         L(message.cookies);
+                //         ok(message);
+                //     });
+                // } else {
+                message.cookies = arrayUnique(message.cookies).join("; ");
+                //L("final cookies Without referer:");
+                //L(message.cookies);
+                ok(message);
+                //}
             });
-        }else{
-            message.cookies = arrayUnique(message.cookies).join("; ");
-            L("final cookies Without referer:");
-            L(message.cookies);
-            callback(message);
+        }catch (errors){
+            fuck(errors); // :)
         }
-
-
     });
+
+
+
 }
 
 BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     let type = request.type;
+
     if(type === "getSelected" || type === "getAll"){
 
         let links = request.message;
         let usedLinks = [];
         L("enterted " + type);
+
+        let promiseQueue = [];
         for(let link of links){
             //Check if we already didnt send this link
             if(link !="" && usedLinks.indexOf(link) == -1){
@@ -254,10 +232,22 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                 let msg = new UrlMessage();
                 msg.url = link;
                 msg.referrer = sender.url;
-                L("Sending...");
-                SendURLMessage(msg);
+                promiseQueue.push(setCookies(msg));
+                //, (cookie_with_message) => {
+                //     L("Cookies set...");
+                //     SendCustomMessage(cookie_with_message);
+                // });
             }
         }
+        Promise.all(promiseQueue).then(allPromises=>{
+            SendCustomMessage({
+                url_links:allPromises,
+                version:VERSION
+            })
+        }, function(err) {
+            L("Some error :) " + err)
+        });
+
     }
     else if(type == "keyPress"){
         let msg = request.message;
@@ -277,7 +267,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 
 //Send URL to the pdm-chrome-wrapper
 function SendURLMessage(message) {
-    setCookies(message, (cookie_with_message) => {
+    setCookies(message).then((cookie_with_message) => {
         L("Cookies set...");
         SendCustomMessage(cookie_with_message);
     });
@@ -285,13 +275,12 @@ function SendURLMessage(message) {
 
 
 function SendInitMessage(){
-    SendCustomMessage({ version: "1.5" });
+    SendCustomMessage({ version: VERSION});
 }
 
 //Crafter for sending message to PDM
 function SendCustomMessage(data,callback){
     L(data);
-    console.log(BrowserNameSpace);
     BrowserNameSpace.runtime.sendNativeMessage(hostName, data,(response) =>{
         L(response);
         callback && callback(response); //Call the callback with response if it's available
@@ -376,14 +365,6 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
     if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
         return;
     }
-
-
-    /*
-     let fileSize = downloadItem['fileSize'];
-     if (fileSize == -1 && fileSize < 300000) {
-     return;
-     }
-     */
 
     let url = downloadItem['finalUrl'] || downloadItem['url'] ;
 
