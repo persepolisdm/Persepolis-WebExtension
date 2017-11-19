@@ -27,7 +27,7 @@ else if(typeof chrome !== 'undefined' )
 
 function sendToExtension(msg) {
     BrowserNameSpace.runtime.sendMessage({
-        type:"keyPress",
+        type: "keyPress",
         message: msg
     });
 }

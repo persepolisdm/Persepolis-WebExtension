@@ -24,9 +24,6 @@
             "match_about_blank":true
         }
     ],
-
-
-
     "description": "Persepolis Download Manager Integration extension replaces default download manager of Google Chrome by PDM Download Manager.",
     "homepage_url": "https://github.com/persepolisdm/persepolis-chrome-wrapper",
     "icons": {
@@ -35,9 +32,10 @@
         "128": "icons/icon_128.png"
     },
     "manifest_version": 2,
-
+    "minimum_chrome_version": "19.0",
     "name": "Persepolis Download Manager Integration",
     "short_name": "Persepolis",
+    "offline_enabled": true,
     "permissions": [
         "<all_urls>",
         "webRequest",
@@ -49,13 +47,5 @@
         "storage",
         "tabs"
     ],
-    "version": "1.7",
-
-
-    "applications": {
-        "gecko": {
-            "id": "com.persepolis.pdmchromewrapper@persepolisdm.github.io",
-            "strict_min_version": "50.0"
-        }
-    }
+    "version": "1.7"
 }

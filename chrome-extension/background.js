@@ -235,21 +235,17 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                 promiseQueue.push(setCookies(msg));
                 //, (cookie_with_message) => {
                 //     L("Cookies set...");
-                //     SendCustomMessage(cookie_with_message);
+                //     S endCustomMessage(cookie_with_message);
                 // });
             }
         }
         Promise.all(promiseQueue).then(allPromises=>{
-            SendCustomMessage({
-                url_links:allPromises,
-                version:VERSION
-            })
+            SendToPDM(allPromises);
         }, function(err) {
             L("Some error :) " + err)
         });
-
     }
-    else if(type == "keyPress"){
+    else if(type == "keyPress"){        
         let msg = request.message;
         if(msg === 'enable') {
             // Temporarily enable
@@ -265,12 +261,23 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
 });
 
 
-//Send URL to the pdm-chrome-wrapper
-function SendURLMessage(message) {
+//Send cookie and send data to SendToPDM function
+function setCookieAndSendToPDM(message) {
     setCookies(message).then((cookie_with_message) => {
         L("Cookies set...");
-        SendCustomMessage(cookie_with_message);
+        SendToPDM(cookie_with_message);
     });
+}
+
+/**
+ *
+ *
+ */
+function SendToPDM(data,callback){
+    SendCustomMessage({
+        url_links:data.constructor === Array ? data : [data],
+        version:VERSION
+    },callback)
 }
 
 
@@ -281,8 +288,10 @@ function SendInitMessage(){
 //Crafter for sending message to PDM
 function SendCustomMessage(data,callback){
     L(data);
+    L("Sending data ....");
     BrowserNameSpace.runtime.sendNativeMessage(hostName, data,(response) =>{
         L(response);
+        L("Data sent !");
         callback && callback(response); //Call the callback with response if it's available
     });
 
@@ -320,7 +329,7 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
         let msg = new UrlMessage();
         msg.url = info['linkUrl'];
         msg.referrer = info['pageUrl'];
-        SendURLMessage(msg);
+        setCookieAndSendToPDM(msg);
     }else if(info.menuItemId ==="download_links_with_pdm"){
         BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
     }else if(info.menuItemId ==="download_all_links_with_pdm"){
@@ -352,7 +361,7 @@ if(isChrome){
             let msg = new UrlMessage();
             msg.url = url;
             msg.referrer = downloadItem['referrer'];
-            SendURLMessage(msg);
+            setCookieAndSendToPDM(msg);
         }
     });
 }
@@ -390,7 +399,7 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         let msg = new UrlMessage();
         msg.url = url;
         msg.referrer = downloadItem['referrer'];
-        SendURLMessage(msg);
+        setCookieAndSendToPDM(msg);
 
     }
 });
@@ -419,10 +428,7 @@ function isBlackListed(url) {
         }
     }
     return false;
-
 }
-
-
 
 function setInterruptDownload(interrupt, writeToStorage) {
     interruptDownloads = interrupt;

@@ -44,10 +44,8 @@ $(document).ready(function () {
     let interrupt = (localStorage["pdm-interrupt"] == "true");
     chkDom.prop('checked',interrupt);
     keywordsDom.val(localStorage["pdm-keywords"]);
-    console.log(chkDom.checked);
-    console.log(chkDom);
     keywordsDom.on("change",saveSettings);
     chkDom.on("change",saveSettings);
-
+    saveSettings();
 
 });
