@@ -24,8 +24,8 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false;
 
-const DEBUG = true;
-const VERSION = "1.6";
+const DEBUG = false;
+const VERSION = "1.7.1";
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
 
@@ -80,7 +80,7 @@ let hostName = 'com.persepolis.pdmchromewrapper';
 let keywords = [];
 
 
-SendInitMessage();
+//SendInitMessage(); Remove init cause we are in deadline xD
 
 
 if (localStorage["pdm-keywords"]) {
@@ -365,8 +365,6 @@ if(isChrome){
         }
     });
 }
-
-
 
 // Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
