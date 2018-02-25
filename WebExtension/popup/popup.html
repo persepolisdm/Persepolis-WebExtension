@@ -22,7 +22,7 @@
 
     <link rel="stylesheet" type="text/css" href="css/popup.css">
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
-    <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="js/materialize.min.js"></script>
     <script src="js/popup.js"></script>
 </head>
@@ -44,9 +44,14 @@
       <br>
       <label for="keywords"><p>Exclude URLs containing:</p></label>
       <div class="input-field">
-        <i class="material-icons prefix">http</i>
+        <i class="material-icons prefix">Keywords</i>
         <input id="keywords" type="text" placeholder="Eg: .jpg, .png, twitter.com"  class="validate">
-      </div>Shortcuts:<br>
+      </div>
+        <div class="input-field">
+            <i class="material-icons prefix">Minimum Size </i>
+            <input id="fileSize" type="text" value="5 MB"  class="validate">
+        </div>
+        Shortcuts:<br>
         Disable extension temporary: Hold <div class="chip">Insert</div><br>
         Toggle enable extension: <div class="chip">Ctrl + Shift + U</div><br>
     </div>
