@@ -25,27 +25,52 @@ else if(typeof chrome !== 'undefined' )
     BrowserNameSpace = chrome;
 
 
+let keywordsDom,dlInterruptCheckBox, contextMenuCheckbox;
+
+
 function saveSettings() {
     let keywords = keywordsDom.val();
-    let interrupt = chkDom.prop('checked');
+    let interrupt = dlInterruptCheckBox.prop('checked');
+    let contenxtMenu = contextMenuCheckbox.prop('checked');
+
     localStorage["pdm-keywords"] = keywords;
+    localStorage["pdm-interrupt"] = interrupt;
+    localStorage["context-menu"] = contenxtMenu;
     BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
         backgroundPage.updateKeywords(keywords);
         backgroundPage.setInterruptDownload(interrupt, true);
+        backgroundPage.setContextMenu(contenxtMenu);
     });
-    //window.close();
 }
-let keywordsDom,chkDom;
+
 //Do after load
 $(document).ready(function () {
-    keywordsDom = $('#keywords');
-    chkDom = $('#chk-interrupt');
 
-    let interrupt = (localStorage["pdm-interrupt"] == "true");
-    chkDom.prop('checked',interrupt);
-    keywordsDom.val(localStorage["pdm-keywords"]);
-    keywordsDom.on("change",saveSettings);
-    chkDom.on("change",saveSettings);
-    saveSettings();
+    BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
+        let config = backgroundPage.getExtensionConfig();
+
+        //Init variables from config
+        keywordsDom = $('#keywords');
+        dlInterruptCheckBox = $('#chk-interrupt');
+        contextMenuCheckbox = $('#context_menu');
+
+        // let interrupt = (localStorage["pdm-interrupt"] == "true");
+        dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
+
+
+        // let contextMenu = (localStorage['context-menu'] == 'true');
+        contextMenuCheckbox.prop('checked', config['context-menu']);
+
+        keywordsDom.val(config['keywords']);
+
+
+        //Listen on changes and save them immediately
+        dlInterruptCheckBox.on("change",saveSettings);
+        keywordsDom.on("change",saveSettings);
+        contextMenuCheckbox.on("change",saveSettings);
+
+        // saveSettings();
+    });
+
 
 });

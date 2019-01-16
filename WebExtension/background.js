@@ -74,8 +74,8 @@ function L(msg) {
 
 
 let interruptDownloads = true;
+let contextMenu = true;
 let PDMNotFound = false;
-let interruptDownload = false;
 let hostName = 'com.persepolis.pdmchromewrapper';
 let keywords = [];
 
@@ -83,21 +83,8 @@ let keywords = [];
 //SendInitMessage(); Remove init cause we are in deadline xD
 
 
-if (localStorage["pdm-keywords"]) {
-    keywords = localStorage["pdm-keywords"].split(/[\s,]+/);
-} else {
-    localStorage["pdm-keywords"] = '';
-}
 
-
-if (!localStorage["pdm-interrupt"]) {
-    localStorage["pdm-interrupt"] = 'true';
-} else {
-    let interrupt = (localStorage["pdm-interrupt"] == "true");
-    setInterruptDownload(interrupt);
-}
-
-
+setConfig();
 
 function getDomain(url){
 
@@ -245,7 +232,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
             L("Some error :) " + err)
         });
     }
-    else if(type == "keyPress"){        
+    else if(type == "keyPress"){
         let msg = request.message;
         if(msg === 'enable') {
             // Temporarily enable
@@ -298,50 +285,10 @@ function SendCustomMessage(data,callback){
 }
 
 
-//Add download with persepolis to context menu
-BrowserNameSpace.contextMenus.create({
-    title: 'Download with Persepolis',
-    id: "download_with_pdm",
-    contexts: ['link']
-});
-
-//Add download selected text to context menu
-BrowserNameSpace.contextMenus.create({
-    title: 'Download Selected links with Persepolis',
-    id: "download_links_with_pdm",
-    contexts: ['selection']
-});
-
-//Add download ALL LINKS to context menu
-BrowserNameSpace.contextMenus.create({
-    title: 'Download All Links with Persepolis',
-    id: "download_all_links_with_pdm",
-    contexts: ['page']
-});
-
-
-
-
-BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
-    "use strict";
-    if (info.menuItemId === "download_with_pdm") {
-        L(info['linkUrl']);
-        let msg = new UrlMessage();
-        msg.url = info['linkUrl'];
-        msg.referrer = info['pageUrl'];
-        setCookieAndSendToPDM(msg);
-    }else if(info.menuItemId ==="download_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
-    }else if(info.menuItemId ==="download_all_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
-    }
-});
-
-
 
 if(isChrome){
     //Finding files types in chrome is not like firefox
-    //Cause firefox first find file type then start download but chrome has another event
+    //Cause firefox first find file type then start download but chrome uses another event
     BrowserNameSpace.downloads.onDeterminingFilename.addListener( (downloadItem,suggest)=>{
 
         if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
@@ -428,14 +375,89 @@ function isBlackListed(url) {
     return false;
 }
 
-function setInterruptDownload(interrupt, writeToStorage) {
-    interruptDownloads = interrupt;
+function setInterruptDownload(interrupt) {
     if (interrupt) {
         BrowserNameSpace.browserAction.setIcon({ path: "./icons/icon_32.png" });
     } else {
         BrowserNameSpace.browserAction.setIcon({ path: "./icons/icon_disabled_32.png" });
     }
-    if(writeToStorage) {
-        localStorage["pdm-interrupt"] = interrupt.toString();
+}
+
+
+
+function getExtensionConfig() {
+    return {
+        'pdm-interrupt': ConfigGetVal('pdm-interrupt', interruptDownloads) == 'true',
+        'context-menu':  ConfigGetVal('context-menu', true) == 'true',
+        'keywords': ConfigGetVal('keywords', '')
     }
+}
+
+function ConfigGetVal(key, default_value) {
+    let value = localStorage.getItem(key);
+    if(value === null ) {
+        value = default_value;
+    }
+    return value;
+}
+
+
+function setContextMenu(newState) {
+
+    // if(contextMenu == newState) return;
+
+    if(!newState){
+        BrowserNameSpace.contextMenus.removeAll();
+    }else{
+        try{
+            //Add download with persepolis to context menu
+            BrowserNameSpace.contextMenus.create({
+                title: 'Download with Persepolis',
+                id: "download_with_pdm",
+                contexts: ['link']
+            });
+
+            //Add download selected text to context menu
+            BrowserNameSpace.contextMenus.create({
+                title: 'Download Selected links with Persepolis',
+                id: "download_links_with_pdm",
+                contexts: ['selection']
+            });
+
+            //Add download ALL LINKS to context menu
+            BrowserNameSpace.contextMenus.create({
+                title: 'Download All Links with Persepolis',
+                id: "download_all_links_with_pdm",
+                contexts: ['page']
+            });
+
+            BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
+                "use strict";
+                if (info.menuItemId === "download_with_pdm") {
+                    L(info['linkUrl']);
+                    let msg = new UrlMessage();
+                    msg.url = info['linkUrl'];
+                    msg.referrer = info['pageUrl'];
+                    setCookieAndSendToPDM(msg);
+                }else if(info.menuItemId ==="download_links_with_pdm"){
+                    BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
+                }else if(info.menuItemId ==="download_all_links_with_pdm"){
+                    BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
+                }
+            });
+        }catch (e) {
+            //Who cares?
+        }
+    }
+
+    contextMenu = newState;
+}
+
+function setConfig() {
+    let config = getExtensionConfig();
+    keywords = config['keywords'].split(/[\s,]+/);
+
+    setInterruptDownload(config['pdm-interrupt']);
+
+    setContextMenu(config['context-menu']);
 }

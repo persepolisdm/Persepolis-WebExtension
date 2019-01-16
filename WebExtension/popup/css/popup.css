@@ -52,6 +52,11 @@ body {
     padding-left: 10px !important;
     padding-top: 50px !important;
 }
+
+.title-text a{
+    color: #00897b !important;
+}
+
 .hr {
     border: 0;
     height: 1px;
@@ -83,4 +88,9 @@ body {
 
   /* Support for IE. */
   font-feature-settings: 'liga';
+}
+
+.material-input{
+    /*transform: translateY(-10px);*/
+    height: 2rem !important;
 }
