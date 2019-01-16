@@ -453,6 +453,7 @@ function setContextMenu(newState) {
     contextMenu = newState;
 }
 
+
 function setConfig() {
     let config = getExtensionConfig();
     keywords = config['keywords'].split(/[\s,]+/);
