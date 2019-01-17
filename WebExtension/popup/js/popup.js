@@ -36,14 +36,17 @@ function saveSettings() {
 
 
     BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
-        backgroundPage.updateKeywords(keywords);
-        backgroundPage.setInterruptDownload(interrupt, true);
-        localStorage["pdm-keywords"] = keywords;
         localStorage["pdm-interrupt"] = interrupt;
+        backgroundPage.setInterruptDownload(interrupt);
 
-        if(contenxtMenu != backgroundPage.contextMenu){
-            backgroundPage.setContextMenu(contenxtMenu);
+        localStorage["keywords"] = keywords;
+        backgroundPage.updateKeywords(keywords);
+
+        let config = backgroundPage.getExtensionConfig();
+
+        if(contenxtMenu != config['context-menu']){
             localStorage["context-menu"] = contenxtMenu;
+            backgroundPage.setContextMenu(contenxtMenu);
         }
 
     });
@@ -61,11 +64,11 @@ $(document).ready(function () {
         contextMenuCheckbox = $('#context_menu');
 
         // let interrupt = (localStorage["pdm-interrupt"] == "true");
-        dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
+        dlInterruptCheckBox.prop('checked', config['pdm-interrupt'] == 'true');
 
 
         // let contextMenu = (localStorage['context-menu'] == 'true');
-        contextMenuCheckbox.prop('checked', config['context-menu']);
+        contextMenuCheckbox.prop('checked', config['context-menu'] == 'true');
 
         keywordsDom.val(config['keywords']);
 

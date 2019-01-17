@@ -24,7 +24,7 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false, isVivaldi=false;
 
-const DEBUG = false;
+const DEBUG = true;
 const VERSION = "1.7.1";
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
@@ -74,6 +74,7 @@ function L(msg) {
         console.log(msg);
 }
 
+setInterval(()=>{L(interruptDownloads)},1000);
 
 let interruptDownloads = true;
 let contextMenu = true;
@@ -244,7 +245,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
             setInterruptDownload(false);
         } else {
             // Toggle
-            setInterruptDownload(!interruptDownloads, true);
+            setInterruptDownload(!interruptDownloads);
         }
     }
 });
@@ -292,7 +293,6 @@ if(isChrome && !isVivaldi){
     //Finding files types in chrome is not like firefox
     //Cause firefox first find file type then start download but chrome uses another event
     //Vivaldi uses Chrome engine, But saves files like firefox :|
-
     BrowserNameSpace.downloads.onDeterminingFilename.addListener( (downloadItem,suggest)=>{
 
         if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
@@ -319,7 +319,6 @@ if(isChrome && !isVivaldi){
 
 // Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
-
 
     if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
         return;
@@ -361,7 +360,7 @@ function updateKeywords(data) {
         if(tmp ==""){
             keywords.splice(i,1);
             i--;
-        }
+            }
     }
 }
 
@@ -373,6 +372,9 @@ function isBlackListed(url) {
         return true;
 
     for (keyword of keywords) {
+        if(keyword.trim() == "")
+            continue;
+
         if (url != "" && url.includes(keyword)) {
             return true;
         }
@@ -381,6 +383,8 @@ function isBlackListed(url) {
 }
 
 function setInterruptDownload(interrupt) {
+    L("Interrupts:" + interrupt);
+    interruptDownloads = interrupt;
     if (interrupt) {
         BrowserNameSpace.browserAction.setIcon({ path: "./icons/icon_32.png" });
     } else {
@@ -393,7 +397,7 @@ function setInterruptDownload(interrupt) {
 function getExtensionConfig() {
     return {
         'pdm-interrupt': ConfigGetVal('pdm-interrupt', interruptDownloads) == 'true',
-        'context-menu':  ConfigGetVal('context-menu', true) == 'true',
+        'context-menu':  ConfigGetVal('context-menu', contextMenu) == 'true',
         'keywords': ConfigGetVal('keywords', '')
     }
 }
@@ -401,7 +405,7 @@ function getExtensionConfig() {
 function ConfigGetVal(key, default_value) {
     let value = localStorage.getItem(key);
     if(value === null ) {
-        value = default_value;
+        value = default_value+'';
     }
     return value;
 }
@@ -467,8 +471,8 @@ function setConfig() {
     let config = getExtensionConfig();
     keywords = config['keywords'].split(/[\s,]+/);
 
-    setInterruptDownload(config['pdm-interrupt']);
+    setInterruptDownload(config['pdm-interrupt'] == 'true');
 
     if(config['context-menu'] != contextMenu)
-        setContextMenu(config['context-menu']);
+        setContextMenu(config['context-menu']=='true');
 }
