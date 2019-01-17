@@ -33,13 +33,19 @@ function saveSettings() {
     let interrupt = dlInterruptCheckBox.prop('checked');
     let contenxtMenu = contextMenuCheckbox.prop('checked');
 
-    localStorage["pdm-keywords"] = keywords;
-    localStorage["pdm-interrupt"] = interrupt;
-    localStorage["context-menu"] = contenxtMenu;
+
+
     BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
         backgroundPage.updateKeywords(keywords);
         backgroundPage.setInterruptDownload(interrupt, true);
-        backgroundPage.setContextMenu(contenxtMenu);
+        localStorage["pdm-keywords"] = keywords;
+        localStorage["pdm-interrupt"] = interrupt;
+
+        if(contenxtMenu != backgroundPage.contextMenu){
+            backgroundPage.setContextMenu(contenxtMenu);
+            localStorage["context-menu"] = contenxtMenu;
+        }
+
     });
 }
 
