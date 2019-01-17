@@ -32,16 +32,18 @@ function sendToExtension(msg) {
     });
 }
 
+
+const temoraory_disable_keys = ["Insert", "Backquote"];
 window.onkeydown = function(event) {
-    if (event.keyCode == 45) { // Insert
+    if (temoraory_disable_keys.includes(event.code)) { // Insert
         sendToExtension('disable');
     }
 };
 
 window.onkeyup = function(event) {
-    if (event.keyCode == 45) { // Insert
+    if (temoraory_disable_keys.includes(event.code)) { // Insert
         sendToExtension('enable');
-    } else if (event.keyCode == 85 && event.ctrlKey && event.shiftKey) { // Ctrl + Shift + U
+    } else if (event.code === "KeyU" && event.ctrlKey && event.shiftKey) { // Ctrl + Shift + U
         sendToExtension('toggle');
     }
 };
