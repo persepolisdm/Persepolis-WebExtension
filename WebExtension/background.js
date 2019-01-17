@@ -24,7 +24,7 @@
 let BrowserNameSpace;
 let isChrome=false,isFF=false, isVivaldi=false;
 
-const DEBUG = true;
+const DEBUG = false;
 const VERSION = "1.7.1";
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
