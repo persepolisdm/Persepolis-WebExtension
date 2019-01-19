@@ -384,6 +384,7 @@ function isBlackListed(url) {
 
 function setInterruptDownload(interrupt) {
     L("Interrupts:" + interrupt);
+    localStorage["pdm-interrupt"] = interrupt;
     interruptDownloads = interrupt;
     if (interrupt) {
         BrowserNameSpace.browserAction.setIcon({ path: "./icons/icon_32.png" });
@@ -445,7 +446,8 @@ function setContextMenu(newState) {
                     title: 'Download All Links with Persepolis',
                     id: "download_all_links_with_pdm",
                     contexts: ['page']
-                },()=>void chrome.runtime.lastError);
+                }
+                ,()=>void chrome.runtime.lastError);
         }catch (e) {
             //Who cares?
         }
@@ -473,9 +475,8 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
 function setConfig() {
     let config = getExtensionConfig();
     keywords = config['keywords'].split(/[\s,]+/);
-    L(config);
+
     setInterruptDownload(config['pdm-interrupt']);
 
-    if(config['context-menu'] != contextMenu)
-        setContextMenu(config['context-menu']);
+    setContextMenu(config['context-menu']);
 }

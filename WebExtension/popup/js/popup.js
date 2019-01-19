@@ -36,7 +36,7 @@ function saveSettings() {
 
 
     BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
-        localStorage["pdm-interrupt"] = interrupt;
+
         backgroundPage.setInterruptDownload(interrupt);
 
         localStorage["keywords"] = keywords;
@@ -65,10 +65,8 @@ $(document).ready(function () {
         // let interrupt = (localStorage["pdm-interrupt"] == "true");
         dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
 
-
         // let contextMenu = (localStorage['context-menu'] == 'true');
         contextMenuCheckbox.prop('checked', config['context-menu']);
-
         keywordsDom.val(config['keywords']);
 
 
