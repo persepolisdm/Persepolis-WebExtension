@@ -48,7 +48,6 @@ function saveSettings() {
             localStorage["context-menu"] = contenxtMenu;
             backgroundPage.setContextMenu(contenxtMenu);
         }
-
     });
 }
 
@@ -64,18 +63,20 @@ $(document).ready(function () {
         contextMenuCheckbox = $('#context_menu');
 
         // let interrupt = (localStorage["pdm-interrupt"] == "true");
-        dlInterruptCheckBox.prop('checked', config['pdm-interrupt'] == 'true');
+        dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
 
 
         // let contextMenu = (localStorage['context-menu'] == 'true');
-        contextMenuCheckbox.prop('checked', config['context-menu'] == 'true');
+        contextMenuCheckbox.prop('checked', config['context-menu']);
 
         keywordsDom.val(config['keywords']);
 
 
         //Listen on changes and save them immediately
         dlInterruptCheckBox.on("change",saveSettings);
-        keywordsDom.on("change",saveSettings);
+        // keywordsDom.on("change",saveSettings);
+
+        keywordsDom.on("change paste keyup", saveSettings);
         contextMenuCheckbox.on("change",saveSettings);
 
         // saveSettings();

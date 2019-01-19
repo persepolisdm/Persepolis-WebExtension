@@ -25,7 +25,7 @@ let BrowserNameSpace;
 let isChrome=false,isFF=false, isVivaldi=false;
 
 const DEBUG = false;
-const VERSION = "1.7.1";
+const VERSION = "1.9.1";
 
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
 
@@ -396,17 +396,20 @@ function setInterruptDownload(interrupt) {
 
 function getExtensionConfig() {
     return {
-        'pdm-interrupt': ConfigGetVal('pdm-interrupt', interruptDownloads) == 'true',
-        'context-menu':  ConfigGetVal('context-menu', contextMenu) == 'true',
+        'pdm-interrupt': ConfigGetVal('pdm-interrupt', interruptDownloads),
+        'context-menu':  ConfigGetVal('context-menu', contextMenu),
         'keywords': ConfigGetVal('keywords', '')
     }
 }
 
 function ConfigGetVal(key, default_value) {
     let value = localStorage.getItem(key);
+    console.log("Getting Key:" + key  +" ::  " + value)
     if(value === null ) {
-        value = default_value+'';
-    }
+        value = default_value;
+        console.log("Value Is NuLL:" + key  +" ::  " + value)
+    }else if(["true","false"].includes(value))
+        value = value == "true"; // Converts string Boolean to Boolean
     return value;
 }
 
@@ -470,9 +473,9 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
 function setConfig() {
     let config = getExtensionConfig();
     keywords = config['keywords'].split(/[\s,]+/);
-
-    setInterruptDownload(config['pdm-interrupt'] == 'true');
+    L(config);
+    setInterruptDownload(config['pdm-interrupt']);
 
     if(config['context-menu'] != contextMenu)
-        setContextMenu(config['context-menu']=='true');
+        setContextMenu(config['context-menu']);
 }
