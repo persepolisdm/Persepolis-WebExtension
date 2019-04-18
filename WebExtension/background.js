@@ -26,9 +26,9 @@ let isChrome=false,isFF=false, isVivaldi=false;
 
 const DEBUG = false;
 const VERSION = "1.9.3";
-
+const MIN_FILE_SIZE_INTERRUPT = 1 * (1024 *1024); // Don't interrupt downloads less that 1 mg
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
-
+  
 
 
 function UrlMessage() {
@@ -304,7 +304,11 @@ if(isChrome && !isVivaldi){
         let fileName = downloadItem['filename'];
         let extension = fileName.split(".").pop();
 
-        if(!url || isBlackListed(url) || (fileName !="" && isBlackListed(extension))){
+        if(!url ||
+            isBlackListed(url) ||
+            (fileName !="" && isBlackListed(extension)) ||
+            downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT
+        ){
             suggest();
         }else{
             BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
@@ -339,7 +343,11 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         let fileName = downloadItem['filename'];
         let extension = fileName.split(".").pop();
 
-        if(isBlackListed(url) || (fileName !="" && isBlackListed(extension))){
+        if(
+            isBlackListed(url) ||
+            (fileName !="" && isBlackListed(extension)) ||
+            downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT
+        ){
             return;
         }
 
