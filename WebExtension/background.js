@@ -35,7 +35,7 @@ const INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS = 5 * 1000;
 function UrlMessage() {
     this.url= '';
     this.cookies= '';
-    this.useragent= '';
+    this.useragent= navigator.userAgent;
     this.filename= '';
     this.referrer= '';
     this.postdata= '';
