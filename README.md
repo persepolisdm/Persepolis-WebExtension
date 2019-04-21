@@ -1,11 +1,16 @@
 Forked from [uget-chrome-wrapper](https://github.com/slgobinath/uget-chrome-wrapper)
 
 -----
-# Persepolis WebExtension
+## Persepolis WebExtension
 Integrate Persepolis Download Manager with Chrome\Chromium\FireFox\Opera and any other WebExtension standard browser. With this tool, Persepolis Download Manager can interrupt and catch your downloads browsers or download many links at once.
 
 For more details, visit [Persepolis Github Page](https://github.com/persepolisdm/persepolis)
 
+
+----
+# Install
+
+[Firefox Add-on](https://addons.mozilla.org/en-US/firefox/addon/persepolis-dlm-integration/)    
 [Google chrome store](https://chrome.google.com/webstore/detail/persepolis-download-manag/legimlagjjoghkoedakdjhocbeomojao)
 
 ## Contributing
