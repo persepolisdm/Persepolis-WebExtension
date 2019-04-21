@@ -25,10 +25,11 @@ let BrowserNameSpace;
 let isChrome=false,isFF=false, isVivaldi=false;
 
 const DEBUG = false;
-const VERSION = "1.9.3";
+const VERSION = "2.0.0";
 const MIN_FILE_SIZE_INTERRUPT = 1 * (1024 *1024); // Don't interrupt downloads less that 1 mg
+const INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS = 5 * 1000;
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
-  
+
 
 
 function UrlMessage() {
@@ -74,7 +75,7 @@ function L(msg) {
         console.log(msg);
 }
 
-setInterval(()=>{L(interruptDownloads)},1000);
+//setInterval(()=>{L(interruptDownloads)},1000);
 
 let interruptDownloads = true;
 let contextMenu = true;
@@ -83,7 +84,7 @@ let hostName = 'com.persepolis.pdmchromewrapper';
 let keywords = [];
 
 
-//SendInitMessage(); Remove init cause we are in deadline xD
+SendInitMessage(); // Remove init cause we are in deadline xD
 
 
 
@@ -205,6 +206,10 @@ function setCookies(message) {
 
 }
 
+function getFileNameFromUrl(link) {
+    return link.split('/').pop().split('#')[0].split('?')[0];
+}
+
 BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     let type = request.type;
 
@@ -222,6 +227,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                 let msg = new UrlMessage();
                 msg.url = link;
                 msg.referrer = sender.url;
+                msg.filename = getFileNameFromUrl(link);
                 promiseQueue.push(setCookies(msg));
                 //, (cookie_with_message) => {
                 //     L("Cookies set...");
@@ -272,17 +278,36 @@ function SendToPDM(data,callback){
 
 
 function SendInitMessage(){
-    SendCustomMessage({ version: VERSION});
+    //Try to connect to persepolis, if failed after timeout, disable extension
+    let timeOutPersepolisId = setTimeout(()=>{
+        PDMNotFound = true;
+        setInterruptDownload(false);
+        L("Persepolis not found !!")
+    }, INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS);
+
+    SendCustomMessage({ version: VERSION}, (response)=>{
+            if(response){
+                L("Connection to Persepolis was successful :)");
+                clearTimeout(timeOutPersepolisId);
+            }else{
+                L("Init message failed :(")
+            }
+
+        }
+
+    );
 }
 
 //Crafter for sending message to PDM
 function SendCustomMessage(data,callback){
-    L(data);
-    L("Sending data ....");
-    BrowserNameSpace.runtime.sendNativeMessage(hostName, data,(response) =>{
-        L(response);
-        L("Data sent !");
-        callback && callback(response); //Call the callback with response if it's available
+    // L(data);
+    // L("Sending data ....");
+    BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
+        L(`Got data: ${JSON.stringify(response)}`);
+        if(callback){
+            callback(response); //Call the callback with response if it's available
+        }
+
     });
 
 }
@@ -295,7 +320,7 @@ if(isChrome && !isVivaldi){
     //Vivaldi uses Chrome engine, But saves files like firefox :|
     BrowserNameSpace.downloads.onDeterminingFilename.addListener( (downloadItem,suggest)=>{
 
-        if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
+        if (!interruptDownloads) { // pdm-chrome-wrapper not reachable
             suggest();
             return;
         }
@@ -314,6 +339,7 @@ if(isChrome && !isVivaldi){
             BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
             BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
             let msg = new UrlMessage();
+            msg.filename = fileName;
             msg.url = url;
             msg.referrer = downloadItem['referrer'];
             setCookieAndSendToPDM(msg);
@@ -324,7 +350,7 @@ if(isChrome && !isVivaldi){
 // Interrupt downloads
 BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
 
-    if (PDMNotFound || !interruptDownloads) { // pdm-chrome-wrapper not reachable
+    if (!interruptDownloads) { // pdm-chrome-wrapper not reachable
         return;
     }
 
@@ -355,6 +381,7 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
         let msg = new UrlMessage();
         msg.url = url;
+        msg.filename = fileName;
         msg.referrer = downloadItem['referrer'];
         setCookieAndSendToPDM(msg);
 
@@ -368,7 +395,7 @@ function updateKeywords(data) {
         if(tmp ==""){
             keywords.splice(i,1);
             i--;
-            }
+        }
     }
 }
 
@@ -471,6 +498,7 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
         L(info['linkUrl']);
         let msg = new UrlMessage();
         msg.url = info['linkUrl'];
+        msg.filename = getFileNameFromUrl(info['linkUrl']);
         msg.referrer = info['pageUrl'];
         setCookieAndSendToPDM(msg);
     }else if(info.menuItemId ==="download_links_with_pdm"){
