@@ -18,7 +18,9 @@
     let nodes = selectedNode.querySelectorAll("a");
     let links = [];
     for(let i=0;i<nodes.length;i++){
-        links.push(nodes[i].href);
+        let l = nodes[i].href.trim();
+        if (l !== "")
+            links.push(l);
     }
 
     //Send html selection back to extension

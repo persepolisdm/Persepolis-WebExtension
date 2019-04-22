@@ -19,7 +19,9 @@
 //Get links of anchor tags
     let anchor_elements = document.querySelectorAll("a");
     for(let i=0; i<anchor_elements.length; i++) {
-        links.push(anchor_elements[i].href);
+        let l = nodes[i].href.trim();
+        if (l !== "")
+            links.push(l);
     }
 
 
