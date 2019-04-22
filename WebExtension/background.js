@@ -227,7 +227,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
                 let msg = new UrlMessage();
                 msg.url = link;
                 msg.referrer = sender.url;
-                msg.filename = getFileNameFromUrl(link);
+                msg.filename =  getFileNameFromUrl(link);
                 promiseQueue.push(setCookies(msg));
             }
         }

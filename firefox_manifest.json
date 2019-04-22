@@ -14,6 +14,9 @@
       "js": [
         "contentScripts/content.js"
       ],
+      "css": [
+        "contentScripts/modal.css"
+      ],
       "matches": [
         "https://*/*",
         "http://*/*",
