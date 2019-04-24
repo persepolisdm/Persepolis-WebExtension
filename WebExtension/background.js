@@ -326,9 +326,9 @@ if(isChrome && !isVivaldi){
         let extension = fileName.split(".").pop();
 
         if(!url ||
-            isBlackListed(url) ||
-            (fileName !="" && isBlackListed(extension)) ||
-            downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT
+            isBlackListed(url) || // Url is black listed
+            (fileName !="" && isBlackListed(extension)) || // extension of filename is not valid
+            ( 0 < downloadItem.fileSize  && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
         ){
             suggest();
         }else{
@@ -366,9 +366,8 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         let extension = fileName.split(".").pop();
 
         if(
-            isBlackListed(url) ||
             (fileName !="" && isBlackListed(extension)) ||
-            downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT
+            ( 0 < downloadItem.fileSize  && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
         ){
             return;
         }
