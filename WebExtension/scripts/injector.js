@@ -13,8 +13,8 @@ function injectPdmModal(){
             <div class="pdm-inputs">
                 
                 <select id="pdm_include_or_exclude" class="pdm-select">
-                    <option value="include"> Have </option>
-                    <option value="exclude"> Not Have </option>
+                    <option value="include"> Include</option>
+                    <option value="exclude"> Exclude </option>
                 </select>
                 
                 <input placeholder="in filename" type="text" id="pdm_text" class="pdm-input">
@@ -29,9 +29,6 @@ function injectPdmModal(){
             <pdminput id="pdm_cancel_modal"> Cancel </pdminput>
         </div>
         <div id="pdm-preview-links">
-<!--            <pdmlink> -->
-<!--                -->
-<!--            </pdmlink>-->
         </div>
     </div>
 </div>`;
