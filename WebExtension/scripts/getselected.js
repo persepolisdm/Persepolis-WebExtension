@@ -1,5 +1,3 @@
-
-
 {
 
     if (typeof BrowserNameSpace === "undefined") {
@@ -10,9 +8,10 @@
             BrowserNameSpace = chrome;
     }
 
-
+    let usedLinks = {}; // Store unique keys only using a hashmap.
     let links = [];
     let filteredLinks = [];
+    let uncheckedLinkIndexes = [];
     const extensions = {}; // Create object of url extensions
     for (let i = 0; i < window.getSelection().rangeCount; i++) {
         const selectedNode = window.getSelection().getRangeAt(i).cloneContents();
@@ -20,15 +19,16 @@
         for (let i = 0; i < nodes.length; i++) {
             let l = nodes[i].href.trim();
 
-            if (l !== "" || l.startsWith("mailto")) {
+            if (l !== "" && !(l in usedLinks) && !l.startsWith("mailto")) {
+                usedLinks[l] = true; //Add link to used link so we won't use it again
                 links.push(l);
                 const extension = getExtensionOfUrl(l).toLowerCase();
-
                 if (extension !== "")
                     extensions[extension] = true;
             }
         }
     }
+
 
     function filterLinks() {
         const conditionValue = conditionTypeSelectOption.options[conditionTypeSelectOption.selectedIndex].value;
@@ -71,23 +71,61 @@
 
     function doFilter() {
         filteredLinks = filterLinks();
+        uncheckedLinkIndexes = []
         pdmPreviewLinks.innerHTML ='';
-        filteredLinks.map(link=>{
-            let pdmLink = document.createElement("pdmlink");
-            pdmLink.textContent = decodeURIComponent(link);
+        filteredLinks.map((link, index)=>{
+
+            const pdmLink = document.createElement("pdmlink");
+            const checkboxId = `pdm-link-id-${index}`;
+
+
+            const checkbox = document.createElement("input");
+            checkbox.id = checkboxId;
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            // checkbox['urlIndex'] = index;
+            checkbox.onchange = function (){
+                let change = 0;
+                if(this.checked){
+                    uncheckedLinkIndexes = uncheckedLinkIndexes.filter(item=> item !== index)
+                    change++;
+                }else{
+                    uncheckedLinkIndexes.push(index);
+                    change--;
+                }
+                pdmLinkCount.innerText = Number(pdmLinkCount.innerText) + change
+
+            };
+
+            const label = document.createElement("label");
+            label.htmlFor = checkboxId;
+            label.textContent = decodeURIComponent(link);
+
+
+
+            pdmLink.appendChild(checkbox);
+            pdmLink.appendChild(label);
+            // pdmLink.textContent = decodeURIComponent(link);
             pdmPreviewLinks.appendChild(pdmLink);
         });
         pdmLinkCount.innerHTML = filteredLinks.length+""
     }
 
-    document.getElementById('pdm_captuare_links').onclick = function () {
-        dismissModal(filteredLinks, true)
+    function getFinalCheckedLinks(){
+        return filteredLinks.filter((link,index) => !uncheckedLinkIndexes.includes(index) )
     }
 
-    window.onkeyup = (e)=>{
+    document.getElementById('pdm_captuare_links').onclick = function () {
+        dismissModal(getFinalCheckedLinks(), true)
+    }
+
+    // uncheckedLinkIndexes.push()
+
+
+    includeTextDom.onkeyup = (e)=>{
         shortcutHandler(
             e,
-            ()=>{dismissModal(filteredLinks, true)},
+            ()=>{dismissModal(getFinalCheckedLinks(), true)},
             ()=>{dismissModal([], false) }
         )
     };

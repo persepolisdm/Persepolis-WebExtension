@@ -22,33 +22,17 @@ function injectPdmModal(){
                <select id="pdm_include_extension" class="pdm-select">
                             
                </select>
-            
-<!--                <pdmtable>&lt;!&ndash; LOL xD&ndash;&gt;-->
-<!--                    <pdmtr>-->
-<!--                        <pdmtd>Include:</pdmtd>-->
-<!--                        <pdmtd><input placeholder="Must have in filename" type="text" id="pdm_include_text" class="pdm-input"></pdmtd>-->
-<!--                        <pdmtd><select id="pdm_include_extension" class="pdm-select">-->
-<!--                            <option value="-1"> Select extension</option>-->
-<!--                        </select></pdmtd>-->
-<!--                    </pdmtr>-->
-<!--                    <pdmtr>-->
-<!--                        <pdmtd>Exclude:</pdmtd>-->
-<!--                        <pdmtd><input placeholder="Must not have in filename" type="text" id="pdm_exclude_text" class="pdm-input"></pdmtd>-->
-<!--                        <pdmtd><select id="pdm_exclude_extension" class="pdm-select">-->
-<!--                            <option value="-1"> Select extension</option>-->
-<!--                        </select></pdmtd>-->
-<!--                    </pdmtr>-->
-<!--                </pdmtable>-->
             </div>
-        </div>
+        </div> 
         <div class="pdm-actions">
             <pdminput id="pdm_captuare_links"> Capture <pdmlinkcount id="pdm-link-count"></pdmlinkcount> Links! </pdminput>
             <pdminput id="pdm_cancel_modal"> Cancel </pdminput>
         </div>
         <div id="pdm-preview-links">
-            <pdmlink></pdmlink>
+<!--            <pdmlink> -->
+<!--                -->
+<!--            </pdmlink>-->
         </div>
-        
     </div>
 </div>`;
 
@@ -104,9 +88,6 @@ function dismissModal(links, success) {
     if(success)
         sendToExtension(links);
     removePdmModal();
-
-    //Clean up events and extra doms
-    window.removeEventListener("keyup", shortcutHandler);
 
 }
 function shortcutHandler(event, onSucess, onFail){

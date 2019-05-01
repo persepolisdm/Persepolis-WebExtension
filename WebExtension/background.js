@@ -213,21 +213,20 @@ function getFileNameFromUrl(link) {
 BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     let type = request.type;
 
-    if(type === "getSelected" || type === "getAll"){
+    if(["getAll","getSelected"].includes(type)){
 
         let links = request.message;
-        let usedLinks = {}; // Store unique keys only using a hashmap.
+
         L("enterted " + type);
 
         let promiseQueue = [];
         for(let link of links){
             //Check if we already didnt send this link
-            if(!(link in usedLinks)){
-                usedLinks[link] = true; //Add link to used link so we won't use it again
+            if(link !==""){
                 let msg = new UrlMessage();
                 msg.url = link;
                 msg.referrer = sender.url;
-                msg.filename =  getFileNameFromUrl(link);
+                msg.filename = getFileNameFromUrl(link);
                 promiseQueue.push(setCookies(msg));
             }
         }
@@ -499,14 +498,14 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
             setCookieAndSendToPDM(msg);
             break;
         case "download_links_with_pdm":
-            BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/injector.js" }).then(()=>{
-                BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
+            BrowserNameSpace.tabs.executeScript(tab.id, { file: "/scripts/injector.js" }, ()=>{
+                BrowserNameSpace.tabs.executeScript(tab.id, { file: "/scripts/getselected.js" });
             });
             break;
         case "download_all_links_with_pdm":
-            BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/injector.js" }).then(()=>{
-                BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
-            });
+            BrowserNameSpace.tabs.executeScript(tab.id, { file: "/scripts/injector.js" }, ()=>{
+                BrowserNameSpace.tabs.executeScript(tab.id, { file: "/scripts/getall.js" });
+            })
     }
 
 });

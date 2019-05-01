@@ -158,22 +158,40 @@ select.pdm-select:-moz-focusring {
 #pdm-modal #pdm-preview-links pdmlink:last-child{
     border-bottom-width: 1px;
 }
-#pdm-modal #pdm-preview-links pdmlink{
-    box-sizing: border-box;
-    padding: 3px 5px;
-    width: 100%;
-    font-size: 12px !important;
+
+#pdm-modal #pdm-preview-links pdmlink label{
     display: block;
     word-break: keep-all;
     white-space:nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: calc(100% - 32px);
+    direction: rtl !important;
+    text-align: left;
+    float: right;
+}
+#pdm-modal #pdm-preview-links pdmlink input{
+    width: 30px;
+    float: left;
+    margin: 0 !important;
+    outline: 0;
+
+}
+
+
+#pdm-modal #pdm-preview-links pdmlink{
+    box-sizing: border-box;
+    display: inline-block;
+    padding: 3px 5px;
+    width: 100%;
+    font-size: 12px !important;
     background: #efefef;
     border: 1px solid #00897b;
     border-bottom-width: 0;
     /*The following lines will make overflow of links appear from left instead of right*/
     text-align: left;
     direction:rtl;
+    margin-bottom: -7px;
 }
 
 #pdm-modal #pdmlinkcount{
