@@ -489,18 +489,26 @@ function setContextMenu(newState) {
 
 BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
     "use strict";
-    if (info.menuItemId === "download_with_pdm") {
-        L(info['linkUrl']);
-        let msg = new UrlMessage();
-        msg.url = info['linkUrl'];
-        msg.filename = getFileNameFromUrl(info['linkUrl']);
-        msg.referrer = info['pageUrl'];
-        setCookieAndSendToPDM(msg);
-    }else if(info.menuItemId ==="download_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
-    }else if(info.menuItemId ==="download_all_links_with_pdm"){
-        BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
+    switch (info.menuItemId) {
+        case "download_with_pdm":
+            L(info['linkUrl']);
+            let msg = new UrlMessage();
+            msg.url = info['linkUrl'];
+            msg.filename = getFileNameFromUrl(info['linkUrl']);
+            msg.referrer = info['pageUrl'];
+            setCookieAndSendToPDM(msg);
+            break;
+        case "download_links_with_pdm":
+            BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/injector.js" }).then(()=>{
+                BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
+            });
+            break;
+        case "download_all_links_with_pdm":
+            BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/injector.js" }).then(()=>{
+                BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
+            });
     }
+
 });
 
 function setConfig() {
