@@ -42,9 +42,13 @@ function injectPdmModal(){
             </div>
         </div>
         <div class="pdm-actions">
-            <pdminput id="pdm_captuare_links"> Capture Links! </pdminput>
+            <pdminput id="pdm_captuare_links"> Capture <pdmlinkcount id="pdm-link-count"></pdmlinkcount> Links! </pdminput>
             <pdminput id="pdm_cancel_modal"> Cancel </pdminput>
         </div>
+        <div id="pdm-preview-links">
+            <pdmlink></pdmlink>
+        </div>
+        
     </div>
 </div>`;
 
@@ -76,8 +80,8 @@ function PdmSanitizeHTML(str) {
     return temp.innerHTML;
 }
 function removePdmModal() {
-    const modalHolder = document.getElementById('pdm-modal-holder');
-    modalHolder.classList.add('pdm-modal-holder-hide');
+    // const modalHolder = document.getElementById('pdm-modal-holder');
+    // modalHolder.classList.add('pdm-modal-holder-hide');
     const holder = document.getElementById("pdm-modal-holder");
     holder.parentNode.removeChild(holder); // This syntax for delete dom is really dumb as fuck !
 }
@@ -87,7 +91,7 @@ function getFileNameFromUrl(link) {
 function getExtensionOfUrl(link) {
     const filename = getFileNameFromUrl(link);
     const dotPos = filename.lastIndexOf(".");
-    if(dotPos===-1) return null;
+    if(dotPos===-1) return "";
     return filename.substring(dotPos);
 }
 function sendToExtension(msg) {
@@ -100,5 +104,16 @@ function dismissModal(links, success) {
     if(success)
         sendToExtension(links);
     removePdmModal();
+
+    //Clean up events and extra doms
+    window.removeEventListener("keyup", shortcutHandler);
+
+}
+function shortcutHandler(event, onSucess, onFail){
+    if (event.code === "Enter") {
+        onSucess()
+    } else if (event.code === "Escape") {
+        onFail()
+    }
 }
 injectPdmModal();

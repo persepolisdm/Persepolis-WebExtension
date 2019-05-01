@@ -150,9 +150,32 @@ select.pdm-select:-moz-focusring {
     padding-left: 35px;
 }
 
+#pdm-modal #pdm-preview-links{
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 30px;
+}
+#pdm-modal #pdm-preview-links pdmlink:last-child{
+    border-bottom-width: 1px;
+}
+#pdm-modal #pdm-preview-links pdmlink{
+    box-sizing: border-box;
+    padding: 3px 5px;
+    width: 100%;
+    font-size: 12px !important;
+    display: block;
+    word-break: keep-all;
+    white-space:nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: #efefef;
+    border: 1px solid #00897b;
+    border-bottom-width: 0;
+    /*The following lines will make overflow of links appear from left instead of right*/
+    text-align: left;
+    direction:rtl;
+}
 
+#pdm-modal #pdmlinkcount{
 
-
-
-
-
+}
