@@ -28,7 +28,7 @@
 }
 #pdm-modal{
     width: 700px!important;
-    height: 300px!important;
+    height: 230px!important;
     /*padding: 5px!important;*/
 
     position: absolute!important;
@@ -68,35 +68,32 @@
 
 }
 
-#pdm-modal .pdm-inputs pdmtable{
-    font-size: 1.1em!important;
-    width: 80%!important;
-    margin: auto!important;
-    display: table;
-}
-#pdm-modal .pdm-inputs pdmtr{
-    display: table-row;
-}
-
-#pdm-modal .pdm-inputs pdmtd{
-    display: table-cell;
-}
-
-#pdm-modal .pdm-inputs pdmtable input{
+#pdm-modal .pdm-inputs input{
     all: unset;
     background: #f1f1f1 !important;
     border: solid 1px #00897b!important;
     border-radius: 3px!important;
-    width: 100%!important;
+    /*width: 100%!important;*/
     height: 23px!important;
     padding: 3px 1px!important;
     font-size: 1em!important;
 }
 
-#pdm-modal .pdm-inputs pdmtable select.pdm-select:hover{
+#pdm-modal #pdm_include_extension{
+    min-width: 152px;
+}
+#pdm-modal .pdm-inputs select.pdm-select:hover{
     cursor: pointer;
 }
-#pdm-modal .pdm-inputs pdmtable select.pdm-select{
+select.pdm-select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 #000;
+}
+.pdm-select option:not(:checked) {
+    color: black;
+}
+
+#pdm-modal .pdm-inputs select.pdm-select{
     all: revert;
     margin: auto;
     font-size: 15px !important;
@@ -123,6 +120,7 @@
 #pdm-modal .pdm-actions{
     margin-top: 20px!important;
 
+
 }
 #pdm-modal .pdm-actions pdminput:hover{
     cursor: pointer!important;
@@ -140,4 +138,7 @@
     background: #00897b !important;
     color: #efefef !important;
     font-size: 17px !important;
+}
+#pdm-modal #pdm_include_or_exclude{
+    width: 100px!important;
 }

@@ -18,25 +18,37 @@
             <span> Persepolis Download Manager</span>
         </div>
 
-        <div style="margin: 15px; font-size: 1.5em; color:#00897b">Filter batch downloads</div>
+        <div style="margin: 15px; font-size: 1.5em; color:#00897b">Filter group downloads</div>
         <div class="form">
             <div class="pdm-inputs">
-                <pdmtable><!-- LOL xD-->
-                    <pdmtr>
-                        <pdmtd>Include:</pdmtd>
-                        <pdmtd><input placeholder="Must have in filename" type="text" id="pdm_include_text" class="pdm-input"></pdmtd>
-                        <pdmtd><select id="pdm_include_extension" class="pdm-select">
-                            <option value="-1"> Select extension</option>
-                        </select></pdmtd>
-                    </pdmtr>
-                    <pdmtr>
-                        <pdmtd>Exclude:</pdmtd>
-                        <pdmtd><input placeholder="Must not have in filename" type="text" id="pdm_exclude_text" class="pdm-input"></pdmtd>
-                        <pdmtd><select id="pdm_exclude_extension" class="pdm-select">
-                            <option value="-1"> Select extension</option>
-                        </select></pdmtd>
-                    </pdmtr>
-                </pdmtable>
+                
+                <select id="pdm_include_or_exclude" class="pdm-select">
+                    <option value="include"> Have </option>
+                    <option value="exclude"> Not Have </option>
+                </select>
+                
+                <input placeholder="in filename" type="text" id="pdm_text" class="pdm-input">
+
+               <select id="pdm_include_extension" class="pdm-select">
+                            
+               </select>
+            
+<!--                <pdmtable>&lt;!&ndash; LOL xD&ndash;&gt;-->
+<!--                    <pdmtr>-->
+<!--                        <pdmtd>Include:</pdmtd>-->
+<!--                        <pdmtd><input placeholder="Must have in filename" type="text" id="pdm_include_text" class="pdm-input"></pdmtd>-->
+<!--                        <pdmtd><select id="pdm_include_extension" class="pdm-select">-->
+<!--                            <option value="-1"> Select extension</option>-->
+<!--                        </select></pdmtd>-->
+<!--                    </pdmtr>-->
+<!--                    <pdmtr>-->
+<!--                        <pdmtd>Exclude:</pdmtd>-->
+<!--                        <pdmtd><input placeholder="Must not have in filename" type="text" id="pdm_exclude_text" class="pdm-input"></pdmtd>-->
+<!--                        <pdmtd><select id="pdm_exclude_extension" class="pdm-select">-->
+<!--                            <option value="-1"> Select extension</option>-->
+<!--                        </select></pdmtd>-->
+<!--                    </pdmtr>-->
+<!--                </pdmtable>-->
             </div>
         </div>
         <div class="pdm-actions">
@@ -57,7 +69,7 @@
         modalHolder.classList.remove('pdm-modal-holder-hide');
         const includeSelectOption = document.getElementById("pdm_include_extension");
         const excludeSelectOption = document.getElementById("pdm_exclude_extension");
-        let options = `<option value="-1">Select Extension</option>`;
+        let options = `<option value="no_extension">Select Extension</option>`;
         for( let k of Object.keys(extensions)){
             options+=`<option value="${k}">${k}</option>`;
         }
@@ -108,38 +120,33 @@
     document.getElementById('pdm_cancel_modal').onclick = function(){
         removeModal();
     };
-    showModal(extensions);
-
     document.getElementById('pdm_captuare_links').onclick = function(){
+        debugger;
+        const conditionTypeSelectOption = document.getElementById("pdm_include_or_exclude");
+        const conditionValue = conditionTypeSelectOption.options[conditionTypeSelectOption.selectedIndex].value;
         const includeSelectOption = document.getElementById("pdm_include_extension");
-        const excludeSelectOption = document.getElementById("pdm_exclude_extension");
         const includeExtension = includeSelectOption.options[includeSelectOption.selectedIndex].value;
-        const excludeExtension = excludeSelectOption.options[excludeSelectOption.selectedIndex].value;
+        const includeText = document.getElementById("pdm_text").value.trim();
 
-        const includeText = document.getElementById("pdm_include_text").value.trim();
-        const excludeText = document.getElementById("pdm_exclude_text").value.trim();
-        console.log(includeText);
-        links = links.filter(link=>{
-            const filename = getFileNameFromUrl(link);
-            if(includeExtension != -1 && !filename.endsWith(includeExtension) ){
-                return false;
-            }
-            if(includeText != "" && !filename.includes(includeText)){
-                return false;
-            }
-            if(excludeExtension != -1 && filename.endsWith(includeExtension)){
-                return false;
-            }
-            if(excludeText != "" && filename.includes(includeText)){
-                return false;
-            }
-            return true;
-        });
+        let mustInclude = conditionValue === "include";
+
+        if(includeText!==""  || includeExtension !== "no_extension")
+            links = links.filter(link=>{
+                const filename = getFileNameFromUrl(link);
+
+                if (
+                    (includeExtension !== "no_extension" && filename.endsWith(includeExtension) !== mustInclude) ||
+                    (includeText !== "" && filename.includes(includeText) !== mustInclude)
+                ){
+                    return false;
+                }
+
+                return true;
+            });
         removeModal();
         //Send html selection back to extension
-        let __ = {};
         sendToExtension(links);
-        __;
     };
+    showModal(extensions);
 
 }
