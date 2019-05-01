@@ -98,7 +98,7 @@ function sendToExtension(msg) {
 }
 function dismissModal(links, success) {
     if(success)
-        sendToExtension(filteredLinks);
+        sendToExtension(links);
     removePdmModal();
 }
 injectPdmModal();
