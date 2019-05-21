@@ -25,7 +25,7 @@ let BrowserNameSpace;
 let isChrome=false,isFF=false, isVivaldi=false;
 
 const DEBUG = false;
-const VERSION = "2.0.0";
+const VERSION = "2.2.0";
 const MIN_FILE_SIZE_INTERRUPT = 1 * (1024 *1024); // Don't interrupt downloads less that 1 mg
 const INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS = 5 * 1000;
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
@@ -141,7 +141,7 @@ function getDomain(url){
 
 
 function getCookies(url,callback) {
-    let domain = getDomain(url);// This function was one of the best functions i've ever seen, but now it's uselss. I'll not delete it because i love it... I want to spread it to world using persepolis ... RIP my friend
+    let domain = getDomain(url);// This function was one of the best functions i've ever seen, but now it's useless. I'll not delete it because i love it... I want to spread it to world using persepolis ... RIP my friend
     //let domainQuery= {domain:domain};
     let urlQuery = {url:url};
 
@@ -397,7 +397,7 @@ function isBlackListed(url) {
     /*if (url.includes("//docs.google.com/") || url.includes("googleusercontent.com/docs")) { // Cannot download from Google Docs
      return true;
      }*/
-    if (url.startsWith("blob://"))
+    if (url.startsWith("blob://")) // TODO: Persepolis currently can't handle blob type
         return true;
 
     for (keyword of keywords) {

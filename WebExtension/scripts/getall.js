@@ -14,7 +14,7 @@
     let uncheckedLinkIndexes = [];
     const extensions = {}; // Create object of url extensions
 
-    const nodes = document.querySelectorAll("a")
+    const nodes = document.querySelectorAll("a");
     for (let i = 0; i < nodes.length; i++) {
         let l = nodes[i].href.trim();
         if (l !== "" && !(l in usedLinks) && !l.startsWith("mailto")) {

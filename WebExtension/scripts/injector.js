@@ -12,14 +12,14 @@ function injectPdmModal(){
         <div class="form">
             <div class="pdm-inputs">
                 
-                <select id="pdm_include_or_exclude" class="pdm-select">
+                <select id="pdm_include_or_exclude" class="pdm-select" style="display: inline-block">
                     <option value="include"> Include</option>
                     <option value="exclude"> Exclude </option>
                 </select>
                 
-                <input placeholder="in filename" type="text" id="pdm_text" class="pdm-input">
+                <input placeholder="in filename" type="text" id="pdm_text" class="pdm-input" style="display: inline-block">
 
-               <select id="pdm_include_extension" class="pdm-select">
+               <select id="pdm_include_extension" class="pdm-select" style="display: inline-block">
                             
                </select>
             </div>
@@ -70,10 +70,12 @@ function getFileNameFromUrl(link) {
     return link.split('/').pop().split('#')[0].split('?')[0].trim();
 }
 function getExtensionOfUrl(link) {
-    const filename = getFileNameFromUrl(link);
+    const tempFileName = getFileNameFromUrl(link);
+    const filename = tempFileName === "" ? link : tempFileName ;
     const dotPos = filename.lastIndexOf(".");
-    if(dotPos===-1) return "";
-    return filename.substring(dotPos);
+    if(dotPos===-1)
+        return "";
+    return filename.indexOf("/") === -1 ? filename.substr(dotPos+1, 4) : "";
 }
 function sendToExtension(msg) {
     BrowserNameSpace.runtime.sendMessage({
