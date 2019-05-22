@@ -17,6 +17,7 @@
     const nodes = document.querySelectorAll("a");
     for (let i = 0; i < nodes.length; i++) {
         let l = nodes[i].href.trim();
+
         if (l !== "" && !(l in usedLinks) && !l.startsWith("mailto")) {
             usedLinks[l] = true; //Add link to used link so we won't use it again
             links.push(l);
@@ -36,11 +37,12 @@
         let filtering_links = links;
         if (includeText !== "" || includeExtension !== "no_extension") {
             filtering_links = links.filter(link => {
-                const filename = getFileNameFromUrl(link).toLowerCase(); //TODO: Add case sensitive
-                if (filename === "") return false;
-
+                const filename = link.toLowerCase(); //TODO: Add case sensitive
+                // const filename = getFileNameFromUrl(link).toLowerCase();
+                // if (filename === "") return false;
                 if (
-                    (includeExtension !== "no_extension" && !filename.endsWith(includeExtension)) ||
+                    // TODO: Fix exclude extension
+                    (includeExtension !== "no_extension" && !filename.includes("." + includeExtension)) ||
                     (includeText !== "" && filename.includes(includeText) !== mustInclude)
                 ) {
                     return false;
@@ -69,7 +71,7 @@
 
     function doFilter() {
         filteredLinks = filterLinks();
-        uncheckedLinkIndexes = []
+        uncheckedLinkIndexes = [];
         pdmPreviewLinks.innerHTML ='';
         filteredLinks.map((link, index)=>{
 
@@ -92,18 +94,18 @@
                     change--;
                 }
                 pdmLinkCount.innerText = Number(pdmLinkCount.innerText) + change
-
             };
 
             const label = document.createElement("label");
             label.htmlFor = checkboxId;
-            label.textContent = decodeURIComponent(link);
-
-
+            try{
+                label.textContent = decodeURIComponent(link);
+            }catch (e) {
+                label.textContent = link;
+            }
 
             pdmLink.appendChild(checkbox);
             pdmLink.appendChild(label);
-            // pdmLink.textContent = decodeURIComponent(link);
             pdmPreviewLinks.appendChild(pdmLink);
         });
         pdmLinkCount.innerHTML = filteredLinks.length+""

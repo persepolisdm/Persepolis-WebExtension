@@ -99,14 +99,16 @@
 
             const label = document.createElement("label");
             label.htmlFor = checkboxId;
-            label.textContent = decodeURIComponent(link);
-
-
-
+            try{
+                label.textContent = decodeURIComponent(link);
+            }catch (e) {
+                label.textContent = link;
+            }
             pdmLink.appendChild(checkbox);
             pdmLink.appendChild(label);
             // pdmLink.textContent = decodeURIComponent(link);
             pdmPreviewLinks.appendChild(pdmLink);
+
         });
         pdmLinkCount.innerHTML = filteredLinks.length+""
     }

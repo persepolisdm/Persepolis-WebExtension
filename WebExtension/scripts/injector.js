@@ -44,13 +44,11 @@ function showPdmModal(extensions) {
         100);
     modalHolder.classList.remove('pdm-modal-holder-hide');
     const includeSelectOption = document.getElementById("pdm_include_extension");
-    const excludeSelectOption = document.getElementById("pdm_exclude_extension");
     let options = `<option value="no_extension">Select Extension</option>`;
     for( let k of Object.keys(extensions)){
         options+=`<option value="${PdmSanitizeHTML(k)}">${PdmSanitizeHTML(k)}</option>`;
     }
     includeSelectOption.innerHTML = options;
-    excludeSelectOption.innerHTML = options;
 
     // document.body.classList.add('pdm-blurer');
 }
@@ -67,16 +65,24 @@ function removePdmModal() {
     holder.parentNode.removeChild(holder); // This syntax for delete dom is really dumb as fuck !
 }
 function getFileNameFromUrl(link) {
-    return link.split('/').pop().split('#')[0].split('?')[0].trim();
+    let possibleFileName = link.split('/').pop().split('#')[0].split('?')[0].trim();
+    try{
+        return decodeURIComponent(possibleFileName);
+    }catch (e) {
+        return possibleFileName;
+    }
 }
 function getExtensionOfUrl(link) {
     const tempFileName = getFileNameFromUrl(link);
-    const filename = tempFileName === "" ? link : tempFileName ;
+    let filename = tempFileName === "" ? link : tempFileName ;
     const dotPos = filename.lastIndexOf(".");
     if(dotPos===-1)
         return "";
-    return filename.indexOf("/") === -1 ? filename.substr(dotPos+1, 4) : "";
+    filename = filename.substr(dotPos+1, 4);
+
+    return !filename.match(/^([0-9a-z]+)$/i) || !isNaN(filename) ? "" : filename;
 }
+
 function sendToExtension(msg) {
     BrowserNameSpace.runtime.sendMessage({
         type:"getSelected",
