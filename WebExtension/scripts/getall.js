@@ -40,13 +40,15 @@
                 const filename = link.toLowerCase(); //TODO: Add case sensitive
                 // const filename = getFileNameFromUrl(link).toLowerCase();
                 // if (filename === "") return false;
-                if (
-                    // TODO: Fix exclude extension
-                    (includeExtension !== "no_extension" && !filename.includes("." + includeExtension)) ||
-                    (includeText !== "" && filename.includes(includeText) !== mustInclude)
-                ) {
+
+                //Extension condiftion
+                if (includeExtension !== "no_extension" && filename.includes("." + includeExtension) !== mustInclude)
                     return false;
-                }
+
+                // Text include condition
+                if (includeText !== "" && filename.includes(includeText) !== mustInclude)
+                    return false;
+
 
                 return true;
             });

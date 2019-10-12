@@ -182,7 +182,7 @@ function setCookies(message) {
 
                 message.cookies = urlCookie;
                 // if (false && message.referrer != null && message.referrer != "") {
-                //I know it's always false, at first it looked good but not now. so i saved the code for future jobless source code viewers like you
+                //I know it's always false, at first it looked good but not now. So i saved the code for future jobless source code viewers like you
                 //     getCookies(message.referrer, refererCookies=> {
                 //         //if(message.cookies != refererCookies)
                 //         //message.cookies += "; "+refererCookies;//(message.cookies == refererCookies) ? "" : ("; "+refererCookies);
@@ -193,13 +193,13 @@ function setCookies(message) {
                 //     });
                 // } else {
                 message.cookies = arrayUnique(message.cookies).join("; ");
-                //L("final cookies Without referer:");
-                //L(message.cookies);
-                ok(message);
-                //}
             });
         }catch (errors){
-            fuck(errors); // :)
+            L("Cookies are failed to load");
+            L(errors);
+            // fuck(errors); // :) Ignore cookie errors ( for cases that users disabled cookie access for extensions.
+        }finally {
+            ok(message);
         }
     });
 
@@ -242,7 +242,7 @@ BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendRes
         if(msg === 'enable') {
             // Temporarily enable
             setInterruptDownload(true);
-        } else if(msg == 'disable') {
+        } else if(msg === 'disable') {
             // Temporarily disable
             setInterruptDownload(false);
         } else {
@@ -366,10 +366,14 @@ BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
         let extension = fileName.split(".").pop();
 
         if(
-            (fileName !="" && isBlackListed(extension)) ||
+            (fileName !== "" && isBlackListed(extension)) ||
             ( 0 < downloadItem.fileSize  && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
         ){
             return;
+        }else{
+            setTimeout(()=>{
+                console.log(downloadItem.fileSize);
+            },2000);
         }
 
         BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
