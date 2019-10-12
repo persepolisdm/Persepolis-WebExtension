@@ -38,15 +38,17 @@
         let filtering_links = links;
         if (includeText !== "" || includeExtension !== "no_extension") {
             filtering_links = links.filter(link => {
-                const filename = getFileNameFromUrl(link).toLowerCase(); //TODO: Add case sensitive
+                // const filename = getFileNameFromUrl(link).toLowerCase();
+                const filename = link.toLowerCase(); //TODO: Add case sensitive
                 if (filename === "") return false;
 
-                if (
-                    (includeExtension !== "no_extension" && !filename.endsWith(includeExtension)) ||
-                    (includeText !== "" && filename.includes(includeText) !== mustInclude)
-                ) {
+                //Extension condiftion
+                if (includeExtension !== "no_extension" && filename.includes("." + includeExtension) !== mustInclude)
                     return false;
-                }
+
+                // Text include condition
+                if (includeText !== "" && filename.includes(includeText) !== mustInclude)
+                    return false;
 
                 return true;
             });
