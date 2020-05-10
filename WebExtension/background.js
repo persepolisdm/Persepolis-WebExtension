@@ -482,6 +482,17 @@ function setContextMenu(newState) {
                     contexts: ['page']
                 }
                 ,()=>void chrome.runtime.lastError);
+
+                //Add fetch media to context menu
+                var showForPages = ["*://*/*"];
+                BrowserNameSpace.contextMenus.create({
+                    title: 'Fetch Media',
+                    id: "fetch_media",
+                    documentUrlPatterns: showForPages,
+                    contexts: ['page']
+                }
+                ,()=>void chrome.runtime.lastError
+            );
         }catch (e) {
             //Who cares?
         }
@@ -501,6 +512,17 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
             msg.filename = getFileNameFromUrl(info['linkUrl']);
             msg.referrer = info['pageUrl'];
             setCookieAndSendToPDM(msg);
+            break;
+        case "fetch_media":
+            BrowserNameSpace.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+                let msg = new UrlMessage();
+                let url = tabs[0].url;
+                let title = tabs[0].title;
+                msg.url = url;
+                msg.filename = title;
+                msg.referrer = url;
+                setCookieAndSendToPDM(msg);
+            });
             break;
         case "download_links_with_pdm":
             BrowserNameSpace.tabs.executeScript(tab.id, { file: "/scripts/injector.js" }, ()=>{
