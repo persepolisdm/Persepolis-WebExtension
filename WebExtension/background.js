@@ -84,11 +84,6 @@ let PDMNotFound = false;
 let hostName = 'com.persepolis.pdmchromewrapper';
 let keywords = [];
 
-
-SendInitMessage(); // Remove init cause we are in deadline xD
-
-
-
 setConfig();
 
 function getDomain(url){
