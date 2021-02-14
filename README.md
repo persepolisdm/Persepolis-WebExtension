@@ -13,6 +13,10 @@ For more details, visit [Persepolis Github Page](https://github.com/persepolisdm
 [Firefox Add-on](https://addons.mozilla.org/en-US/firefox/addon/persepolis-dlm-integration/)    
 [Google chrome store](https://chrome.google.com/webstore/detail/persepolis-download-manag/legimlagjjoghkoedakdjhocbeomojao)
 
+If you are using brave, Persepolis integration should be added manually:
+https://github.com/persepolisdm/Persepolis-WebExtension/issues/25
+
+
 ## Contributing
 **Are you a user?**
 
