@@ -26,7 +26,7 @@ let isChrome=false,isFF=false, isVivaldi=false;
 
 const DEBUG = false;
 
-const VERSION = "2.3.0";
+const VERSION = "2.3.1";
 const MIN_FILE_SIZE_INTERRUPT = 1 * (1024 *1024); // Don't interrupt downloads less that 1 mg
 const INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS = 5 * 1000;
 //let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
