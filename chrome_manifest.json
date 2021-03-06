@@ -40,6 +40,7 @@
   "short_name": "Persepolis",
   "offline_enabled": true,
   "permissions": [
+    "<all_urls>",
     "nativeMessaging",
     "contextMenus",
     "downloads",

@@ -42,6 +42,7 @@
   "name": "Persepolis Download Manager Integration",
   "short_name": "Persepolis",
   "permissions": [
+    "<all_urls>",
     "nativeMessaging",
     "contextMenus",
     "downloads",
