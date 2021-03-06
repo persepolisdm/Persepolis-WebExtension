@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 EXPATH="WebExtension"
 
 #Create firefox package, which expects all files directly

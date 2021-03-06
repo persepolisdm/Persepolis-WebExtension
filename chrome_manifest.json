@@ -40,9 +40,6 @@
   "short_name": "Persepolis",
   "offline_enabled": true,
   "permissions": [
-    "<all_urls>",
-    "webRequest",
-    "webRequestBlocking",
     "nativeMessaging",
     "contextMenus",
     "downloads",
@@ -50,5 +47,5 @@
     "storage",
     "tabs"
   ],
-  "version": "2.2.0"
+  "version": "2.3.0"
 }
