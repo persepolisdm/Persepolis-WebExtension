@@ -1,5 +1,7 @@
 /**
 We are dealing with many websites code ... SO EVERYTHING IS !IMPORTANT
+After 2 years, due to user reports, i know batch filter feature was useful. But the code is a mess :))
+Who tf actually reads it anyway?
  */
 
 
@@ -85,7 +87,7 @@ We are dealing with many websites code ... SO EVERYTHING IS !IMPORTANT
     border: solid 1px #00897b!important;
     border-radius: 3px!important;
     /*width: 100%!important;*/
-    height: 23px!important;
+    height: 27px!important;
     padding: 3px 1px!important;
     font-size: 1em!important;
 }
@@ -130,11 +132,10 @@ select.pdm-select:-moz-focusring {
 /*    pointer-events: none;*/
 /*}*/
 
-#pdm-modal .pdm-actions{
-    margin-top: 20px!important;
-
-
+#pdm-modal .pdm-actions {
+    margin: 20px 0 !important;
 }
+
 #pdm-modal .pdm-actions pdminput:hover{
     cursor: pointer!important;
     /*border-color: #EFEFEF!important;*/
@@ -166,7 +167,10 @@ select.pdm-select:-moz-focusring {
 #pdm-modal #pdm-preview-links{
     max-height: 300px;
     overflow-y: auto;
-    margin-top: 30px;
+    font-size: 0 !important;
+}
+#pdm-modal #pdm-preview-links * {
+    font-size: 12px !important;
 }
 #pdm-modal #pdm-preview-links pdmlink:last-child{
     border-bottom-width: 1px;
@@ -179,7 +183,7 @@ select.pdm-select:-moz-focusring {
     overflow: hidden;
     text-overflow: ellipsis;
     width: calc(100% - 32px);
-    direction: rtl !important;
+    direction: ltr !important;
     text-align: left;
     float: right;
 }
@@ -203,7 +207,7 @@ select.pdm-select:-moz-focusring {
     border-bottom-width: 0;
     /*The following lines will make overflow of links appear from left instead of right*/
     text-align: left;
-    direction:rtl;
+    direction: ltr;
     margin-bottom: -7px;
 }
 
