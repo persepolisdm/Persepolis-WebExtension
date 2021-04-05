@@ -35,17 +35,15 @@ function saveSettings() {
 
 
 
-    BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
+    BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
+        await backgroundPage.setInterruptDownload(interrupt);
+        await backgroundPage.chromeStorageSetter('keywords', keywords);
+        await backgroundPage.updateKeywords(keywords);
 
-        backgroundPage.setInterruptDownload(interrupt);
-
-        localStorage["keywords"] = keywords;
-        backgroundPage.updateKeywords(keywords);
-
-        let config = backgroundPage.getExtensionConfig();
+        let config = await backgroundPage.getExtensionConfig();
 
         if(contenxtMenu != config['context-menu']){
-            localStorage["context-menu"] = contenxtMenu;
+            await backgroundPage.chromeStorageSetter('context-menu', contenxtMenu);
             backgroundPage.setContextMenu(contenxtMenu);
         }
     });
@@ -54,18 +52,16 @@ function saveSettings() {
 //Do after load
 $(document).ready(function () {
 
-    BrowserNameSpace.runtime.getBackgroundPage(function(backgroundPage) {
-        let config = backgroundPage.getExtensionConfig();
+    BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
+        let config = await backgroundPage.getExtensionConfig();
 
         //Init variables from config
         keywordsDom = $('#keywords');
         dlInterruptCheckBox = $('#chk-interrupt');
         contextMenuCheckbox = $('#context_menu');
 
-        // let interrupt = (localStorage["pdm-interrupt"] == "true");
         dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
 
-        // let contextMenu = (localStorage['context-menu'] == 'true');
         contextMenuCheckbox.prop('checked', config['context-menu']);
         keywordsDom.val(config['keywords']);
 
