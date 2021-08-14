@@ -47,8 +47,7 @@
     "contextMenus",
     "downloads",
     "cookies",
-    "storage",
-    "tabs"
+    "storage"
   ],
   "version": "2.4.0",
 

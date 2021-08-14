@@ -1,3 +1,9 @@
+if (typeof BrowserNameSpace === "undefined") {
+    if (typeof browser !== 'undefined')
+        BrowserNameSpace = browser;
+    else if (typeof chrome !== 'undefined')
+        BrowserNameSpace = chrome;
+}
 
 function injectPdmModal(){
     const html = `

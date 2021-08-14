@@ -1,7 +1,6 @@
 {
-
+    let BrowserNameSpace;
     if (typeof BrowserNameSpace === "undefined") {
-        BrowserNameSpace;
         if (typeof browser !== 'undefined')
             BrowserNameSpace = browser;
         else if (typeof chrome !== 'undefined')
@@ -138,5 +137,3 @@
     showPdmModal(extensions);
 
 }
-
-
