@@ -40,10 +40,10 @@ function saveSettings() {
         await backgroundPage.chromeStorageSetter('keywords', keywords);
         await backgroundPage.updateKeywords(keywords);
 
-        let config = await backgroundPage.getExtensionConfig();
+        let {contextMenu} = await backgroundPage.getExtensionConfig();
 
-        if(contenxtMenu != config['context-menu']){
-            await backgroundPage.chromeStorageSetter('context-menu', contenxtMenu);
+        if(contenxtMenu != contextMenu){
+            await backgroundPage.chromeStorageSetter('contextMenu', contenxtMenu);
             backgroundPage.setContextMenu(contenxtMenu);
         }
     });
@@ -53,17 +53,21 @@ function saveSettings() {
 $(document).ready(function () {
 
     BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
-        let config = await backgroundPage.getExtensionConfig();
+        let {
+            pdmInterrupt,
+            contextMenu,
+            keywords,
+        } = await backgroundPage.getExtensionConfig();
 
         //Init variables from config
         keywordsDom = $('#keywords');
         dlInterruptCheckBox = $('#chk-interrupt');
         contextMenuCheckbox = $('#context_menu');
 
-        dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
+        dlInterruptCheckBox.prop('checked', pdmInterrupt);
 
-        contextMenuCheckbox.prop('checked', config['context-menu']);
-        keywordsDom.val(config['keywords']);
+        contextMenuCheckbox.prop('checked', contextMenu);
+        keywordsDom.val(keywords);
 
 
         //Listen on changes and save them immediately
@@ -71,9 +75,7 @@ $(document).ready(function () {
         // keywordsDom.on("change",saveSettings);
 
         keywordsDom.on("change paste keyup", saveSettings);
-        contextMenuCheckbox.on("change",saveSettings);
-
-        // saveSettings();
+        contextMenuCheckbox.on("change", saveSettings);
     });
 
 
