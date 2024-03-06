@@ -381,19 +381,34 @@ async function setConfig() {
 
 
 
+/**
+ * @param {Object} params
+ * @param {boolean} params.pdmInterrupt
+ * @param {boolean} params.contextMenu
+ * @param {string} params.keywords
+ */
+async function setExtensionConfig({ pdmInterrupt, contextMenu, keywords }) {
+
+    if (pdmInterrupt !== undefined) await setInterruptDownload(pdmInterrupt);
+    if (keywords !== undefined) await chromeStorageSetter('keywords', keywords);
+    if (contextMenu !== undefined) {
+        await chromeStorageSetter('contextMenu', contextMenu);
+        setContextMenu(contextMenu)
+    }
+}
+
+
+
 const {BrowserNameSpace, isChrome, isFF, isVivaldi} = getBrowserApi();
 BrowserNameSpace.runtime.onInstalled.addListener(async () => {
     SendInitMessage({version: VERSION}); // Remove init because we are in deadline xD
     setConfig();
 });
 
-BrowserNameSpace.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-    const {BrowserNameSpace, isChrome, isFF, isVivaldi} = getBrowserApi();
-    let interruptDownloads = !!(await chromeStorageGetter('pdmInterrupt'));
-    let type = request.type;
+BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) => {
     L("Inside runtime on message")
 
-    if (["getAll", "getSelected"].includes(type)) {
+    if (["getAll", "getSelected"].includes(request.type)) {
 
         let links = request.message;
 
@@ -414,19 +429,42 @@ BrowserNameSpace.runtime.onMessage.addListener(async (request, sender, sendRespo
         }, function (err) {
             L("Some error :) " + err)
         });
-    } else if (type === "keyPress") {
-        let msg = request.message;
-        if (msg === 'enable') {
-            // Temporarily enable
-            setInterruptDownload(true);
-        } else if (msg === 'disable') {
-            // Temporarily disable
-            setInterruptDownload(false);
-        } else {
-            // Toggle
-            setInterruptDownload(!interruptDownloads);
-        }
+        return
     }
+    
+    switch (request.type) {
+        case "keyPress": {
+            // https://stackoverflow.com/questions/44056271/chrome-runtime-onmessage-response-with-async-await
+            (async () => {
+                let interruptDownloads = !!(await chromeStorageGetter('pdmInterrupt'));
+
+                let msg = request.message;
+                if (msg === 'enable') {
+                    // Temporarily enable
+                    setInterruptDownload(true);
+                } else if (msg === 'disable') {
+                    // Temporarily disable
+                    setInterruptDownload(false);
+                } else {
+                    // Toggle
+                    setInterruptDownload(!interruptDownloads);
+                }
+            })();
+            break
+        }
+
+        case "getExtensionConfig": {
+            getExtensionConfig().then(sendResponse)
+            return true;
+        }
+
+        case "setExtensionConfig": {
+            setExtensionConfig({...request.data})
+            break
+        }
+
+    }
+    
 });
 
 // Interrupt downloads
