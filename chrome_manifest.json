@@ -45,7 +45,9 @@
     "contextMenus",
     "downloads",
     "cookies",
-    "storage"
+    "storage",
+    "scripting"
   ],
+  "host_permissions": ["*://*/"],
   "version": "2.4.0"
 }

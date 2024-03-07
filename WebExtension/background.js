@@ -412,7 +412,7 @@ BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) =
 
         let links = request.message;
 
-        L("enterted " + type);
+        L("enterted " + request.type);
 
         let promiseQueue = [];
         for (let link of links) {
@@ -514,8 +514,10 @@ BrowserNameSpace.downloads.onCreated.addListener(async (downloadItem) => {
     }
 });
 
-BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
-    const {BrowserNameSpace, isChrome, isFF, isVivaldi} = getBrowserApi();
+
+
+BrowserNameSpace.contextMenus.onClicked.addListener(function (info, tab) {
+    const { BrowserNameSpace, isChrome, isFF, isVivaldi } = getBrowserApi();
     "use strict";
     switch (info.menuItemId) {
         case "download_with_pdm":
@@ -525,14 +527,29 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
             msg.referrer = info['pageUrl'];
             setCookieAndSendToPDM(msg);
             break;
-        case "download_links_with_pdm":
-            BrowserNameSpace.scripting.executeScript(null, { file: "/scripts/injector.js" }, ()=>{
-                BrowserNameSpace.scripting.executeScript(null, { file: "/scripts/getselected.js" });
+    
+            case "download_links_with_pdm":
+            BrowserNameSpace.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ["/scripts/injector.js"]
+            }, () => {
+                BrowserNameSpace.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ["/scripts/getselected.js"]
+                });
             });
             break;
+
+
         case "download_all_links_with_pdm":
-            BrowserNameSpace.scripting.executeScript(null, { file: "/scripts/injector.js" }, ()=>{
-                BrowserNameSpace.scripting.executeScript(null, { file: "/scripts/getall.js" });
+            BrowserNameSpace.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ["/scripts/injector.js"]
+            }, () => {
+                BrowserNameSpace.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ["/scripts/getall.js"]
+                });
             })
     }
 });

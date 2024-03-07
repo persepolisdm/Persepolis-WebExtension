@@ -1,6 +1,5 @@
 {
   "background": {
-    "scripts": ["background.js"],
     "service_worker": "background.js"
   },
   "action": {
@@ -48,10 +47,11 @@
     "contextMenus",
     "downloads",
     "cookies",
-    "storage"
+    "storage",
+    "scripting"  
   ],
   "version": "4.0.0",
-
+  "host_permissions": ["*://*/"],
   "content_security_policy": {},
 
   "browser_specific_settings": {
