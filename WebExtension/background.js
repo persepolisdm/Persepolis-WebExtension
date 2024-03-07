@@ -468,45 +468,6 @@ BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) =
     
 });
 
-// Interrupt downloads
-BrowserNameSpace.downloads.onCreated.addListener(async (downloadItem) => {
-    const { BrowserNameSpace, isChrome, isFF, isVivaldi } = getBrowserApi();
-    let { pdmInterrupt } = await getExtensionConfig()
-    if (!pdmInterrupt) return;
-
-    let url = downloadItem['finalUrl'] || downloadItem['url'];
-    if (!url) return;
-    if (await isBlackListed(url)) return;
-
-    console.log(isFF, isChrome, isVivaldi)
-    // if (isFF || isVivaldi) { WHa ? Why?  Oh i see
-    // let url = downloadItem['finalUrl'] || downloadItem['url'];
-    let fileName = downloadItem['filename'];
-    const MIN_FILE_SIZE_INTERRUPT = 5 * (1024 * 1024); // Don't interrupt downloads less that 1 mg
-    let extension = fileName.split(".").pop();
-
-    if (
-        (fileName !== "" && await isBlackListed(extension)) ||
-        (0 < downloadItem.fileSize && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
-    ) {
-        return;
-    } else {
-        setTimeout(() => {
-            console.log(downloadItem.fileSize);
-        }, 2000);
-    }
-
-    BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
-    BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
-    let msg = new UrlMessage();
-    msg.url = url;
-    msg.referrer = downloadItem['referrer'];
-    setCookieAndSendToPDM(msg);
-
-    // }
-});
-
-
 
 BrowserNameSpace.contextMenus.onClicked.addListener(function (info, tab) {
     const { BrowserNameSpace, isChrome, isFF, isVivaldi } = getBrowserApi();
@@ -547,36 +508,56 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function (info, tab) {
 });
 
 
-// This is not true anymore??
-// //Finding files types in chrome is not like firefox
-// //Cause firefox first find file type then start download but chrome uses another event
-// //Vivaldi uses Chrome engine, But saves files like firefox :|
-// if (isChrome && !isVivaldi) {
-//     BrowserNameSpace.downloads.onDeterminingFilename.addListener(async (downloadItem, suggest) => {
-//         let interruptDownloads = !!(await chromeStorageGetter('pdmInterrupt'));
-//         if (!interruptDownloads) { // pdm-chrome-wrapper not reachable
-//             suggest();
-//             return;
-//         }
+// This api is called before onCreated
+// So maybe a flag and use existing method??
+// Firefox interrupt has issues and 
+//https://github.com/ugetdm/uget-integrator/issues/108
 
-//         const MIN_FILE_SIZE_INTERRUPT = 5 * (1024 * 1024); // Don't interrupt downloads less that 1 mg
-//         let url = downloadItem['finalUrl'] || downloadItem['url'];
-//         let fileName = downloadItem['filename'];
-//         let extension = fileName.split(".").pop();
+//Finding files types in chrome is not like firefox
+//Cause firefox first find file type then start download but chrome uses another event
+//Vivaldi uses Chrome engine, But saves files like firefox :|
 
-//         if (!url ||
-//             isBlackListed(url) || // Url is black-listed
-//             (fileName.trim() !== "" && isBlackListed(extension)) || // extension of filename is not valid
-//             (0 < downloadItem.fileSize && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
-//         ) {
-//             suggest();
-//         } else {
-//             BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
-//             BrowserNameSpace.downloads.erase({id: downloadItem.id}); // Erase the download from list
-//             let msg = new UrlMessage();
-//             msg.url = url;
-//             msg.referrer = downloadItem['referrer'];
-//             setCookieAndSendToPDM(msg);
-//         }
-//     });
-// }
+// BrowserNameSpace.downloads.onDeterminingFilename.addListener(handleDownloadIterrupts)
+
+// This works for chrome, chromium, brave 
+BrowserNameSpace.downloads.onCreated.addListener(handleDownloadIterrupts)
+
+/**
+ * 
+ * @param {object} downloadItem 
+ * @param {function | undefined} suggest 
+ */
+async function handleDownloadIterrupts(downloadItem, suggest) {
+    const { BrowserNameSpace } = getBrowserApi();
+    let { pdmInterrupt } = await getExtensionConfig()
+    if (!pdmInterrupt) return suggest?.call();
+
+    let url = downloadItem['finalUrl'] || downloadItem['url'];
+    if (!url) return suggest?.call();
+    if (await isBlackListed(url)) return suggest?.call();
+
+
+    let fileName = downloadItem['filename'];
+    const MIN_FILE_SIZE_INTERRUPT = 5 * (1024 * 1024); // Don't interrupt downloads less that 1 mg
+    let extension = fileName.split(".").pop();
+
+    if (
+        (fileName !== "" && await isBlackListed(extension)) ||
+        (0 < downloadItem.fileSize && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
+    )
+        return suggest?.call();
+
+
+    setTimeout(() => {
+        console.log(downloadItem.fileSize);
+    }, 2000);
+
+
+    BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
+    BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
+    let msg = new UrlMessage();
+    msg.url = url;
+    msg.referrer = downloadItem['referrer'];
+    setCookieAndSendToPDM(msg);
+
+}
