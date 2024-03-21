@@ -28,36 +28,26 @@ else if(typeof chrome !== 'undefined' )
 let keywordsDom,dlInterruptCheckBox, contextMenuCheckbox;
 
 
-function saveSettings() {
+function setExtensionConfig() {
     let keywords = keywordsDom.val();
-    let interrupt = dlInterruptCheckBox.prop('checked');
-    let contenxtMenu = contextMenuCheckbox.prop('checked');
+    let pdmInterrupt = dlInterruptCheckBox.prop('checked');
+    let contextMenu = contextMenuCheckbox.prop('checked');
 
 
-
-    BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
-        await backgroundPage.setInterruptDownload(interrupt);
-        await backgroundPage.chromeStorageSetter('keywords', keywords);
-        await backgroundPage.updateKeywords(keywords);
-
-        let {contextMenu} = await backgroundPage.getExtensionConfig();
-
-        if(contenxtMenu != contextMenu){
-            await backgroundPage.chromeStorageSetter('contextMenu', contenxtMenu);
-            backgroundPage.setContextMenu(contenxtMenu);
+    BrowserNameSpace.runtime.sendMessage({
+        type: "setExtensionConfig",
+        data: {
+            pdmInterrupt, contextMenu, keywords 
         }
-    });
+    })
+
 }
 
 //Do after load
 $(document).ready(function () {
 
-    BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
-        let {
-            pdmInterrupt,
-            contextMenu,
-            keywords,
-        } = await backgroundPage.getExtensionConfig();
+    BrowserNameSpace.runtime.sendMessage({ type: "getExtensionConfig" }, (config) => {
+        let { pdmInterrupt, contextMenu, keywords } = config
 
         //Init variables from config
         keywordsDom = $('#keywords');
@@ -71,11 +61,11 @@ $(document).ready(function () {
 
 
         //Listen on changes and save them immediately
-        dlInterruptCheckBox.on("change",saveSettings);
+        dlInterruptCheckBox.on("change", setExtensionConfig);
         // keywordsDom.on("change",saveSettings);
 
-        keywordsDom.on("change paste keyup", saveSettings);
-        contextMenuCheckbox.on("change", saveSettings);
+        keywordsDom.on("change paste keyup", setExtensionConfig);
+        contextMenuCheckbox.on("change", setExtensionConfig);
     });
 
 
