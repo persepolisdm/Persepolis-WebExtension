@@ -235,16 +235,11 @@ function SendInitMessage(payload){
             // Connecting to the native host
             const port = BrowserNameSpace.runtime.connectNative(hostName);
 
-
-            setTimeout(()=>{
-                port.disconnect();
-            }, 5 * 1000);
-
-
             // Listening for messages from the native host
             port.onMessage.addListener((response) => {
                 console.log('Received response:', response);
-                return resolve(response);
+                clearInterval(timeOutPersepolisId);
+                setTimeout(()=>{resolve({PDMNotFound: false})}, 5*1000);
             });
 
             // Handling disconnection
