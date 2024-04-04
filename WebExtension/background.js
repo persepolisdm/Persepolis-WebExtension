@@ -220,45 +220,125 @@ function SendToPDM(data,callback){
     SendCustomMessage({
         url_links:data.constructor === Array ? data : [data],
         version: VERSION
-    }, callback)
+    })
 }
 
 
 function SendInitMessage(payload){
-    return new Promise(function(ok, fuck) {
+    return new Promise(function(resolve, reject) {
         //Try to connect to persepolis, if failed after timeout, disable extension
         let timeOutPersepolisId = setTimeout(()=>{
-            return ok({PDMNotFound: true});
+            return reject({PDMNotFound: true});
         }, 5 * 1000);
 
-        SendCustomMessage(payload, (response)=>{
-                if (response) {
-                    L("Connection to Persepolis was successful :)");
-                    L(response)
-                    ok({PDMNotFound: false})
-                    clearTimeout(timeOutPersepolisId);
-                    return;
-                }
+        try {
+            // Connecting to the native host
+            const port = BrowserNameSpace.runtime.connectNative(hostName);
 
-                L("Init message failed :(")
-                ok({PDMNotFound: true})
-            }
-        );
+
+            setTimeout(()=>{
+                port.disconnect();
+            }, 5 * 1000);
+
+
+            // Listening for messages from the native host
+            port.onMessage.addListener((response) => {
+                console.log('Received response:', response);
+                return resolve(response);
+            });
+
+            // Handling disconnection
+            port.onDisconnect.addListener(() => {
+                if (chrome.runtime.lastError) {
+                    console.error('Disconnected due to an error:', chrome.runtime.lastError);
+                    resolve({PDMNotFound: false});
+                } else {
+                    console.log('Disconnected from the native host.');
+                }
+            });
+
+            // Sending a message to the native host
+            console.log('Sending message to native host:', payload);
+            port.postMessage(payload);
+        } catch (error) {
+            console.error('Error communicating with the native host:', error);
+            clearInterval(timeOutPersepolisId);
+            return reject(error);
+        }
     });
+    //
+    // const PersepolisConnection = BrowserNameSpace.runtime.connectNative(hostName);
+    // PersepolisConnection
+
+    //
+    // BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
+    //     L(`Got data: ${JSON.stringify(response)}`);
+    //     if(callback){
+    //         callback(response); //Call the callback with response if it's available
+    //     }
+    //
+    // });
+
+    //
+    // SendCustomMessage(payload, (response)=>{
+    //         if (response) {
+    //             L("Connection to Persepolis was successful :)");
+    //             L(response)
+    //             ok({PDMNotFound: false})
+    //             clearTimeout(timeOutPersepolisId);
+    //             return;
+    //         }
+    //
+    //         L("Init message failed :(")
+    //         ok({PDMNotFound: true})
+    //     }
+    // );
+    //
+
+
 }
 
 //Crafter for sending message to PDM
-function SendCustomMessage(data, callback){
-    L(`Sening NHM message:`)
-    L(data)
-    BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
-        L(`Got data: ${JSON.stringify(response)}`);
-        if(callback){
-            callback(response); //Call the callback with response if it's available
+function SendCustomMessage(data){
+    return new Promise(function(resolve, reject) {
+        // L(`Sening NHM message:`)
+        // L(data)
+        // BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
+        //     L(`Got data: ${JSON.stringify(response)}`);
+        //     if(callback){
+        //         callback(response); //Call the callback with response if it's available
+        //     }
+        //
+        // });
+        //Try to connect to persepolis, if failed after timeout, disable extension
+        try {
+            // Connecting to the native host
+            const port = BrowserNameSpace.runtime.connectNative(hostName);
+
+
+            let disconnectTimout = setTimeout(()=>{
+                port.disconnect();
+            }, 5 * 1000);
+
+
+            // Listening for messages from the native host
+            port.onMessage.addListener((response) => {
+                clearInterval(disconnectTimout);
+                port.disconnect();
+                resolve(response);
+            });
+
+            // Handling disconnection
+            port.onDisconnect.addListener(() => {
+                resolve();
+            });
+            port.postMessage(data);
+        } catch (error) {
+            console.error('Error communicating with the native host:', error);
+            clearInterval(disconnectTimout);
+            return reject(error);
         }
-
     });
-
 }
 
 async function updateKeywords(data) {
@@ -401,8 +481,14 @@ async function setExtensionConfig({ pdmInterrupt, contextMenu, keywords }) {
 
 const {BrowserNameSpace, isChrome, isFF, isVivaldi} = getBrowserApi();
 BrowserNameSpace.runtime.onInstalled.addListener(async () => {
-    SendInitMessage({version: VERSION}); // Remove init because we are in deadline xD
-    setConfig();
+    let PDMNotFound = false;
+    try {
+        PDMNotFound = (await SendInitMessage({version: VERSION})).PDMNotFound;
+        await setConfig();
+    } catch(e) {
+        PDMNotFound = true;
+    }
+    await setExtensionConfig({pdmInterrupt: PDMNotFound})
 });
 
 BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -431,7 +517,7 @@ BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) =
         });
         return
     }
-    
+
     switch (request.type) {
         case "keyPress": {
             // https://stackoverflow.com/questions/44056271/chrome-runtime-onmessage-response-with-async-await
@@ -465,7 +551,7 @@ BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) =
         }
 
     }
-    
+
 });
 
 
@@ -480,8 +566,8 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function (info, tab) {
             msg.referrer = info['pageUrl'];
             setCookieAndSendToPDM(msg);
             break;
-    
-            case "download_links_with_pdm":
+
+        case "download_links_with_pdm":
             BrowserNameSpace.scripting.executeScript({
                 target: { tabId: tab.id },
                 files: ["/scripts/injector.js"]
@@ -523,9 +609,9 @@ BrowserNameSpace.contextMenus.onClicked.addListener(function (info, tab) {
 BrowserNameSpace.downloads.onCreated.addListener(handleDownloadIterrupts)
 
 /**
- * 
- * @param {object} downloadItem 
- * @param {function | undefined} suggest 
+ *
+ * @param {object} downloadItem
+ * @param {function | undefined} suggest
  */
 async function handleDownloadIterrupts(downloadItem, suggest) {
     const { BrowserNameSpace } = getBrowserApi();
