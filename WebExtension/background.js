@@ -20,16 +20,34 @@
  */
 
 
-//Broswer identifying
-let BrowserNameSpace;
-let isChrome=false,isFF=false, isVivaldi=false;
+const DEBUG = true;
+const VERSION = "4.0.0"; // TODO: Does it work?
+const hostName = 'com.persepolis.pdmchromewrapper';
 
-const DEBUG = false;
 
-const VERSION = "2.3.1";
-const MIN_FILE_SIZE_INTERRUPT = 1 * (1024 *1024); // Don't interrupt downloads less that 1 mg
-const INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS = 5 * 1000;
-//let letItGo = []; //Let it go, let it gooo Can't hold it back anymore
+function getBrowserApi(){
+    let isChrome=false,isFF=false, isVivaldi=false;
+
+    // isSafari
+    let BrowserNameSpace;
+    if(typeof browser !== 'undefined' ){
+        BrowserNameSpace = browser;
+        isFF=true;
+    }
+    else if(typeof chrome !== 'undefined' ){
+        BrowserNameSpace = chrome;
+        isChrome=true;
+        if(navigator.userAgent.includes('Vivaldi/'))
+            isVivaldi = true; // Vivaldi is a subbrowser of chrome :|
+    }
+
+    return {
+        BrowserNameSpace,
+        isFF,
+        isVivaldi,
+        isChrome,
+    };
+}
 
 
 
@@ -37,7 +55,6 @@ function UrlMessage() {
     this.url= '';
     this.cookies= '';
     this.useragent= navigator.userAgent;
-    this.filename= '';
     this.referrer= '';
     this.postdata= '';
 }
@@ -59,37 +76,12 @@ function denCode(str){
     return decodeURIComponent(str) !== str ? str : encodeURI(str);
 }
 
-if(typeof browser !== 'undefined' ){
-    BrowserNameSpace = browser ;
-    isFF=true;
-}
-else if(typeof chrome !== 'undefined' ){
-    BrowserNameSpace = chrome;
-    isChrome=true;
-    if(navigator.userAgent.includes('Vivaldi/'))
-        isVivaldi = true; // Vivaldi is a subbrowser of chrome :|
-}
-
 
 function L(msg) {
-    if(DEBUG)
-        console.log(msg);
+    console.log(msg);
 }
 
-//setInterval(()=>{L(interruptDownloads)},1000);
 
-let interruptDownloads = true;
-let contextMenu = true;
-let PDMNotFound = false;
-let hostName = 'com.persepolis.pdmchromewrapper';
-let keywords = [];
-
-
-SendInitMessage(); // Remove init cause we are in deadline xD
-
-
-
-setConfig();
 
 function getDomain(url){
 
@@ -149,7 +141,7 @@ function getCookies(url,callback) {
     let blacklistDecode = [
         "mycdn.me"
     ];
-
+    const {isChrome, BrowserNameSpace, isFF} = getBrowserApi();
     if(isChrome){
         BrowserNameSpace.cookies.getAll(urlQuery,(urlcookies)=>{
             let cookieArray = [];
@@ -211,47 +203,6 @@ function getFileNameFromUrl(link) {
     return link.split('/').pop().split('#')[0].split('?')[0];
 }
 
-BrowserNameSpace.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    let type = request.type;
-
-    if(["getAll","getSelected"].includes(type)){
-
-        let links = request.message;
-
-        L("enterted " + type);
-
-        let promiseQueue = [];
-        for(let link of links){
-            //Check if we already didnt send this link
-            if(link !==""){
-                let msg = new UrlMessage();
-                msg.url = link;
-                msg.referrer = sender.url;
-                msg.filename = getFileNameFromUrl(link);
-                promiseQueue.push(setCookies(msg));
-            }
-        }
-        Promise.all(promiseQueue).then(allPromises=>{
-            SendToPDM(allPromises);
-        }, function(err) {
-            L("Some error :) " + err)
-        });
-    }
-    else if(type == "keyPress"){
-        let msg = request.message;
-        if(msg === 'enable') {
-            // Temporarily enable
-            setInterruptDownload(true);
-        } else if(msg === 'disable') {
-            // Temporarily disable
-            setInterruptDownload(false);
-        } else {
-            // Toggle
-            setInterruptDownload(!interruptDownloads);
-        }
-    }
-});
-
 
 //Send cookie and send data to SendToPDM function
 function setCookieAndSendToPDM(message) {
@@ -268,161 +219,150 @@ function setCookieAndSendToPDM(message) {
 function SendToPDM(data,callback){
     SendCustomMessage({
         url_links:data.constructor === Array ? data : [data],
-        version:VERSION
-    },callback)
+        version: VERSION
+    })
 }
 
 
-function SendInitMessage(){
-    //Try to connect to persepolis, if failed after timeout, disable extension
-    let timeOutPersepolisId = setTimeout(()=>{
-        PDMNotFound = true;
-        L("Persepolis not found !!")
-    }, INIT_PERSEPOLIS_CONNECTION_TIMEOUT_MS);
+function SendInitMessage(payload){
+    return new Promise(function(resolve, reject) {
+        //Try to connect to persepolis, if failed after timeout, disable extension
+        let timeOutPersepolisId = setTimeout(()=>{
+            return reject({PDMNotFound: true});
+        }, 5 * 1000);
 
-    SendCustomMessage({ version: VERSION}, (response)=>{
-            if(response){
-                L("Connection to Persepolis was successful :)");
-                clearTimeout(timeOutPersepolisId);
-            }else{
-                L("Init message failed :(")
-            }
+        try {
+            // Connecting to the native host
+            const port = BrowserNameSpace.runtime.connectNative(hostName);
 
+            // Listening for messages from the native host
+            port.onMessage.addListener((response) => {
+                console.log('Received response:', response);
+                clearInterval(timeOutPersepolisId);
+                setTimeout(()=>{resolve({PDMNotFound: false})}, 5*1000);
+            });
+
+            // Handling disconnection
+            port.onDisconnect.addListener(() => {
+                if (chrome.runtime.lastError) {
+                    console.error('Disconnected due to an error:', chrome.runtime.lastError);
+                    resolve({PDMNotFound: false});
+                } else {
+                    console.log('Disconnected from the native host.');
+                }
+            });
+
+            // Sending a message to the native host
+            console.log('Sending message to native host:', payload);
+            port.postMessage(payload);
+        } catch (error) {
+            console.error('Error communicating with the native host:', error);
+            clearInterval(timeOutPersepolisId);
+            return reject(error);
         }
+    });
+    //
+    // const PersepolisConnection = BrowserNameSpace.runtime.connectNative(hostName);
+    // PersepolisConnection
 
-    );
+    //
+    // BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
+    //     L(`Got data: ${JSON.stringify(response)}`);
+    //     if(callback){
+    //         callback(response); //Call the callback with response if it's available
+    //     }
+    //
+    // });
+
+    //
+    // SendCustomMessage(payload, (response)=>{
+    //         if (response) {
+    //             L("Connection to Persepolis was successful :)");
+    //             L(response)
+    //             ok({PDMNotFound: false})
+    //             clearTimeout(timeOutPersepolisId);
+    //             return;
+    //         }
+    //
+    //         L("Init message failed :(")
+    //         ok({PDMNotFound: true})
+    //     }
+    // );
+    //
+
+
 }
 
 //Crafter for sending message to PDM
-function SendCustomMessage(data,callback){
-    // L(data);
-    // L("Sending data ....");
-    BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
-        L(`Got data: ${JSON.stringify(response)}`);
-        if(callback){
-            callback(response); //Call the callback with response if it's available
-        }
+function SendCustomMessage(data){
+    return new Promise(function(resolve, reject) {
+        // L(`Sening NHM message:`)
+        // L(data)
+        // BrowserNameSpace.runtime.sendNativeMessage(hostName, data, (response) =>{
+        //     L(`Got data: ${JSON.stringify(response)}`);
+        //     if(callback){
+        //         callback(response); //Call the callback with response if it's available
+        //     }
+        //
+        // });
+        //Try to connect to persepolis, if failed after timeout, disable extension
+        try {
+            // Connecting to the native host
+            const port = BrowserNameSpace.runtime.connectNative(hostName);
 
-    });
 
-}
+            let disconnectTimout = setTimeout(()=>{
+                port.disconnect();
+            }, 5 * 1000);
 
 
+            // Listening for messages from the native host
+            port.onMessage.addListener((response) => {
+                clearInterval(disconnectTimout);
+                port.disconnect();
+                resolve(response);
+            });
 
-if(isChrome && !isVivaldi){
-    //Finding files types in chrome is not like firefox
-    //Cause firefox first find file type then start download but chrome uses another event
-    //Vivaldi uses Chrome engine, But saves files like firefox :|
-    BrowserNameSpace.downloads.onDeterminingFilename.addListener( (downloadItem,suggest)=>{
-
-        if (!interruptDownloads) { // pdm-chrome-wrapper not reachable
-            suggest();
-            return;
-        }
-
-        let url = downloadItem['finalUrl'] || downloadItem['url'] ;
-        let fileName = downloadItem['filename'];
-        let extension = fileName.split(".").pop();
-
-        if(!url ||
-            isBlackListed(url) || // Url is black listed
-            (fileName !="" && isBlackListed(extension)) || // extension of filename is not valid
-            ( 0 < downloadItem.fileSize  && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
-        ){
-            suggest();
-        }else{
-            BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
-            BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
-            let msg = new UrlMessage();
-            msg.filename = fileName;
-            msg.url = url;
-            msg.referrer = downloadItem['referrer'];
-            setCookieAndSendToPDM(msg);
+            // Handling disconnection
+            port.onDisconnect.addListener(() => {
+                resolve();
+            });
+            port.postMessage(data);
+        } catch (error) {
+            console.error('Error communicating with the native host:', error);
+            clearInterval(disconnectTimout);
+            return reject(error);
         }
     });
 }
 
-// Interrupt downloads
-BrowserNameSpace.downloads.onCreated.addListener(function(downloadItem) {
-
-    if (!interruptDownloads) { // pdm-chrome-wrapper not reachable
-        return;
-    }
-
-    let url = downloadItem['finalUrl'] || downloadItem['url'] ;
-
-    if (!url) {
-        return;
-    }
-
-    if(isBlackListed(url)){
-        return;
-    }
-
-    if(isFF || isVivaldi){
-        let url = downloadItem['finalUrl'] || downloadItem['url'] ;
-        let fileName = downloadItem['filename'];
-        let extension = fileName.split(".").pop();
-
-        if(
-            (fileName !== "" && isBlackListed(extension)) ||
-            ( 0 < downloadItem.fileSize  && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
-        ){
-            return;
-        }else{
-            setTimeout(()=>{
-                console.log(downloadItem.fileSize);
-            },2000);
-        }
-
-        BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
-        BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
-        let msg = new UrlMessage();
-        msg.url = url;
-        msg.filename = fileName;
-        msg.referrer = downloadItem['referrer'];
-        setCookieAndSendToPDM(msg);
-
-    }
-});
-
-function updateKeywords(data) {
-    keywords = data.toLowerCase().split(/[\s,]+/);
-    for(let i=0;i<keywords.length;i++){
-        let tmp = keywords[i].trim();
-        if(tmp ==""){
-            keywords.splice(i,1);
-            i--;
-        }
-    }
+async function updateKeywords(data) {
+    const keywords = data.toLowerCase()
+        .split(/[\s,]+/)
+        .filter(keyword => keyword.trim() !== "");
+    await chromeStorageSetter('keywords', keywords.join());
 }
 
-function isBlackListed(url) {
+async function isBlackListed(url) {
     /*if (url.includes("//docs.google.com/") || url.includes("googleusercontent.com/docs")) { // Cannot download from Google Docs
      return true;
      }*/
     if (url.startsWith("blob://")) // TODO: Persepolis currently can't handle blob type
         return true;
+    const keywords = (await ConfigGetVal('keywords', ''))
+        .split(/[\s,]+/)
+        .filter(keyword => keyword.trim() !== "")
 
-    for (keyword of keywords) {
-        if(keyword.trim() == "")
-            continue;
-
-        if (url != "" && url.includes(keyword)) {
-            return true;
-        }
-    }
-    return false;
+    return keywords.some(keyword => url.includes(keyword));
 }
 
 async function setInterruptDownload(interrupt) {
     L("Interrupts:" + interrupt);
-    await chromeStorageSetter('pdm-interrupt', interrupt);
-    interruptDownloads = interrupt;
+    await chromeStorageSetter('pdmInterrupt', interrupt);
     if (interrupt) {
-        BrowserNameSpace.browserAction.setIcon({path: "./icons/icon_32.png"});
+        BrowserNameSpace.action.setIcon({path: "./icons/icon_32.png"});
     } else {
-        BrowserNameSpace.browserAction.setIcon({path: "./icons/icon_disabled_32.png"});
+        BrowserNameSpace.action.setIcon({path: "./icons/icon_disabled_32.png"});
     }
 }
 
@@ -430,8 +370,8 @@ async function setInterruptDownload(interrupt) {
 
 async function getExtensionConfig() {
     return {
-        'pdm-interrupt': await ConfigGetVal('pdm-interrupt', interruptDownloads),
-        'context-menu':  await ConfigGetVal('context-menu', contextMenu),
+        'pdmInterrupt': await ConfigGetVal('pdmInterrupt'),
+        'contextMenu':  await ConfigGetVal('contextMenu'),
         'keywords': await ConfigGetVal('keywords', '')
     }
 }
@@ -455,81 +395,250 @@ async function ConfigGetVal(key, default_value='') {
     try {
         configValue = await chromeStorageGetter(key);
     } catch {}
-    console.log("Getting Key:" + key + " ::  " + configValue)
+    L("Getting Key:" + key + " ::  " + configValue)
     if (["true", "false"].includes(configValue))
         return configValue == "true"; // Converts string Boolean to Boolean
     return configValue;
 }
 
 
-function setContextMenu(newState) {
-    if(!newState){
+async function setContextMenu(newState) {
+    if (!newState) {
         BrowserNameSpace.contextMenus.removeAll();
-    }else{
-        try{
-            //Add download with persepolis to context menu
-            BrowserNameSpace.contextMenus.create({
-                    title: 'Download with Persepolis',
-                    id: "download_with_pdm",
-                    contexts: ['link']
-                }
-                ,()=>void chrome.runtime.lastError
-            );
+        return
+    }
+    try {
+        //Add download with persepolis to context menu
+        BrowserNameSpace.contextMenus.create({
+                title: 'Download with Persepolis',
+                id: "download_with_pdm",
+                contexts: ['link']
+            }
+            , () => void chrome.runtime.lastError
+        );
 
-            //Add download selected text to context menu
-            BrowserNameSpace.contextMenus.create({
-                    title: 'Download Selected links with Persepolis',
-                    id: "download_links_with_pdm",
-                    contexts: ['selection']
-                }
-                ,()=>void chrome.runtime.lastError
-            );
+        //Add download selected text to context menu
+        BrowserNameSpace.contextMenus.create({
+                title: 'Download Selected links with Persepolis',
+                id: "download_links_with_pdm",
+                contexts: ['selection']
+            }
+            , () => void chrome.runtime.lastError
+        );
 
-            //Add download ALL LINKS to context menu
-            BrowserNameSpace.contextMenus.create({
-                    title: 'Download All Links with Persepolis',
-                    id: "download_all_links_with_pdm",
-                    contexts: ['page']
-                }
-                ,()=>void chrome.runtime.lastError);
-        }catch (e) {
-            //Who cares?
-        }
+        //Add download ALL LINKS to context menu
+        BrowserNameSpace.contextMenus.create({
+                title: 'Download All Links with Persepolis',
+                id: "download_all_links_with_pdm",
+                contexts: ['page']
+            }
+            , () => void chrome.runtime.lastError);
+    } catch (e) {
+        //Who cares?
     }
 
-    contextMenu = newState;
+    await chromeStorageSetter('contextMenu', newState);
 }
 
 
-BrowserNameSpace.contextMenus.onClicked.addListener(function(info, tab) {
+async function setConfig() {
+    //TODO: This function should be removed I think, at least global part
+    let {
+        pdmInterrupt,
+        contextMenu,
+        keywords,
+    } = await getExtensionConfig();
+
+    await setInterruptDownload(pdmInterrupt);
+
+    await setContextMenu(contextMenu);
+}
+
+
+
+/**
+ * @param {Object} params
+ * @param {boolean} params.pdmInterrupt
+ * @param {boolean} params.contextMenu
+ * @param {string} params.keywords
+ */
+async function setExtensionConfig({ pdmInterrupt, contextMenu, keywords }) {
+
+    if (pdmInterrupt !== undefined) await setInterruptDownload(pdmInterrupt);
+    if (keywords !== undefined) await chromeStorageSetter('keywords', keywords);
+    if (contextMenu !== undefined) {
+        await chromeStorageSetter('contextMenu', contextMenu);
+        setContextMenu(contextMenu)
+    }
+}
+
+
+
+const {BrowserNameSpace, isChrome, isFF, isVivaldi} = getBrowserApi();
+BrowserNameSpace.runtime.onInstalled.addListener(async () => {
+    let PDMNotFound = false;
+    try {
+        PDMNotFound = (await SendInitMessage({version: VERSION})).PDMNotFound;
+        await setConfig();
+    } catch(e) {
+        PDMNotFound = true;
+    }
+    await setExtensionConfig({pdmInterrupt: PDMNotFound})
+});
+
+BrowserNameSpace.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    L("Inside runtime on message")
+
+    if (["getAll", "getSelected"].includes(request.type)) {
+
+        let links = request.message;
+
+        L("enterted " + request.type);
+
+        let promiseQueue = [];
+        for (let link of links) {
+            //Check if we already didnt send this link
+            if (link !== "") {
+                let msg = new UrlMessage();
+                msg.url = link;
+                msg.referrer = sender.url;
+                promiseQueue.push(setCookies(msg));
+            }
+        }
+        Promise.all(promiseQueue).then(allPromises => {
+            SendToPDM(allPromises);
+        }, function (err) {
+            L("Some error :) " + err)
+        });
+        return
+    }
+
+    switch (request.type) {
+        case "keyPress": {
+            // https://stackoverflow.com/questions/44056271/chrome-runtime-onmessage-response-with-async-await
+            // TODO Has issues? interrupt doesn't get reset sometimes
+            (async () => {
+                let interruptDownloads = !!(await chromeStorageGetter('pdmInterrupt'));
+
+                let msg = request.message;
+                if (msg === 'enable') {
+                    // Temporarily enable
+                    setInterruptDownload(true);
+                } else if (msg === 'disable') {
+                    // Temporarily disable
+                    setInterruptDownload(false);
+                } else {
+                    // Toggle
+                    setInterruptDownload(!interruptDownloads);
+                }
+            })();
+            break
+        }
+
+        case "getExtensionConfig": {
+            getExtensionConfig().then(sendResponse)
+            return true;
+        }
+
+        case "setExtensionConfig": {
+            setExtensionConfig({...request.data})
+            break
+        }
+
+    }
+
+});
+
+
+BrowserNameSpace.contextMenus.onClicked.addListener(function (info, tab) {
+    const { BrowserNameSpace, isChrome, isFF, isVivaldi } = getBrowserApi();
     "use strict";
     switch (info.menuItemId) {
         case "download_with_pdm":
             L(info['linkUrl']);
             let msg = new UrlMessage();
             msg.url = info['linkUrl'];
-            msg.filename = getFileNameFromUrl(info['linkUrl']);
             msg.referrer = info['pageUrl'];
             setCookieAndSendToPDM(msg);
             break;
+
         case "download_links_with_pdm":
-            BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/injector.js" }, ()=>{
-                BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getselected.js" });
+            BrowserNameSpace.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ["/scripts/injector.js"]
+            }, () => {
+                BrowserNameSpace.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ["/scripts/getselected.js"]
+                });
             });
             break;
+
+
         case "download_all_links_with_pdm":
-            BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/injector.js" }, ()=>{
-                BrowserNameSpace.tabs.executeScript(null, { file: "/scripts/getall.js" });
+            BrowserNameSpace.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ["/scripts/injector.js"]
+            }, () => {
+                BrowserNameSpace.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ["/scripts/getall.js"]
+                });
             })
     }
-
 });
 
-async function setConfig() {
-    let config = await getExtensionConfig();
-    keywords = config['keywords'].split(/[\s,]+/);
 
-    setInterruptDownload(config['pdm-interrupt']);
+// This api is called before onCreated
+// So maybe a flag and use existing method??
+// Firefox interrupt has issues and 
+//https://github.com/ugetdm/uget-integrator/issues/108
 
-    setContextMenu(config['context-menu']);
+//Finding files types in chrome is not like firefox
+//Cause firefox first find file type then start download but chrome uses another event
+//Vivaldi uses Chrome engine, But saves files like firefox :|
+
+// BrowserNameSpace.downloads.onDeterminingFilename.addListener(handleDownloadIterrupts)
+
+// This works for chrome, chromium, brave 
+BrowserNameSpace.downloads.onCreated.addListener(handleDownloadIterrupts)
+
+/**
+ *
+ * @param {object} downloadItem
+ * @param {function | undefined} suggest
+ */
+async function handleDownloadIterrupts(downloadItem, suggest) {
+    const { BrowserNameSpace } = getBrowserApi();
+    let { pdmInterrupt } = await getExtensionConfig()
+    if (!pdmInterrupt) return suggest?.call();
+
+    let url = downloadItem['finalUrl'] || downloadItem['url'];
+    if (!url) return suggest?.call();
+    if (await isBlackListed(url)) return suggest?.call();
+
+
+    let fileName = downloadItem['filename'];
+    const MIN_FILE_SIZE_INTERRUPT = 5 * (1024 * 1024); // Don't interrupt downloads less that 1 mg
+    let extension = fileName.split(".").pop();
+
+    if (
+        (fileName !== "" && await isBlackListed(extension)) ||
+        (0 < downloadItem.fileSize && downloadItem.fileSize < MIN_FILE_SIZE_INTERRUPT) // File size is determined and is less than MIN_FILE_SIZE
+    )
+        return suggest?.call();
+
+
+    setTimeout(() => {
+        console.log(downloadItem.fileSize);
+    }, 2000);
+
+
+    BrowserNameSpace.downloads.cancel(downloadItem.id); // Cancel the download
+    BrowserNameSpace.downloads.erase({ id: downloadItem.id }); // Erase the download from list
+    let msg = new UrlMessage();
+    msg.url = url;
+    msg.referrer = downloadItem['referrer'];
+    setCookieAndSendToPDM(msg);
+
 }

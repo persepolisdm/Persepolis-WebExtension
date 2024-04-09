@@ -28,52 +28,44 @@ else if(typeof chrome !== 'undefined' )
 let keywordsDom,dlInterruptCheckBox, contextMenuCheckbox;
 
 
-function saveSettings() {
+function setExtensionConfig() {
     let keywords = keywordsDom.val();
-    let interrupt = dlInterruptCheckBox.prop('checked');
-    let contenxtMenu = contextMenuCheckbox.prop('checked');
+    let pdmInterrupt = dlInterruptCheckBox.prop('checked');
+    let contextMenu = contextMenuCheckbox.prop('checked');
 
 
-
-    BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
-        await backgroundPage.setInterruptDownload(interrupt);
-        await backgroundPage.chromeStorageSetter('keywords', keywords);
-        await backgroundPage.updateKeywords(keywords);
-
-        let config = await backgroundPage.getExtensionConfig();
-
-        if(contenxtMenu != config['context-menu']){
-            await backgroundPage.chromeStorageSetter('context-menu', contenxtMenu);
-            backgroundPage.setContextMenu(contenxtMenu);
+    BrowserNameSpace.runtime.sendMessage({
+        type: "setExtensionConfig",
+        data: {
+            pdmInterrupt, contextMenu, keywords 
         }
-    });
+    })
+
 }
 
 //Do after load
 $(document).ready(function () {
 
-    BrowserNameSpace.runtime.getBackgroundPage( async (backgroundPage) => {
-        let config = await backgroundPage.getExtensionConfig();
+    BrowserNameSpace.runtime.sendMessage({ type: "getExtensionConfig" }, (config) => {
+        let { pdmInterrupt, contextMenu, keywords } = config
 
         //Init variables from config
         keywordsDom = $('#keywords');
         dlInterruptCheckBox = $('#chk-interrupt');
         contextMenuCheckbox = $('#context_menu');
 
-        dlInterruptCheckBox.prop('checked', config['pdm-interrupt']);
+        dlInterruptCheckBox.prop('checked', pdmInterrupt);
 
-        contextMenuCheckbox.prop('checked', config['context-menu']);
-        keywordsDom.val(config['keywords']);
+        contextMenuCheckbox.prop('checked', contextMenu);
+        keywordsDom.val(keywords);
 
 
         //Listen on changes and save them immediately
-        dlInterruptCheckBox.on("change",saveSettings);
+        dlInterruptCheckBox.on("change", setExtensionConfig);
         // keywordsDom.on("change",saveSettings);
 
-        keywordsDom.on("change paste keyup", saveSettings);
-        contextMenuCheckbox.on("change",saveSettings);
-
-        // saveSettings();
+        keywordsDom.on("change paste keyup", setExtensionConfig);
+        contextMenuCheckbox.on("change", setExtensionConfig);
     });
 
 
