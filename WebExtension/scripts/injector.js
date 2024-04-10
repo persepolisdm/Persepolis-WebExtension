@@ -11,7 +11,7 @@ function injectPdmModal(){
     <div id="pdm-modal">
         <div class="pdm-header">
             <div class="pdm-logo"></div>
-            <span> Persepolis Download Manager</span>
+            <span> Persepolis Download Manager WebExtension</span>
         </div>
 
         <div id="pdm_filter_title" style="margin: 15px; font-size: 1.5em; color:#00897b">Filter group downloads</div>
